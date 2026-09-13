@@ -19,3 +19,4 @@ validation-service/__pycache__/
 .claudeignore
 .windsurfrules
 **/copilot-instructions.md
+.vercel/

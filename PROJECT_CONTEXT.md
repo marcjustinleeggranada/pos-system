@@ -187,7 +187,7 @@ Built on Sections 1–2 without modifying their API files.
 - Vape shop (store 1): `owner@vape.com` / `password123`
 - Cosmetic store (store 2): `owner@cosmetic.com` / `password123`
 
-**Owner action:** push to GitHub, deploy Render service first, then Vercel with env vars (`DATABASE_URL`, `JWT_SECRET`, `GEMINI_API_KEY`, `VALIDATION_SERVICE_URL`). See `SECTION_5_NOTES.md`.
+**Owner action:** push to GitHub, then Render → **New Blueprint** → connect repo → set `DATABASE_URL`, `JWT_SECRET`, `GEMINI_API_KEY` on **pos-web**. See `SECTION_5_NOTES.md`.
 
 ## 10. Documentation Requirement — MANDATORY for every section, no exceptions
 
