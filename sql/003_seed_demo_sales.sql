@@ -1,0 +1,2 @@
+-- DEPRECATED: Demo fake sales data removed.
+-- Use sql/006_real_catalog.sql for the real product catalog instead.

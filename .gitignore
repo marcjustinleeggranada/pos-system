@@ -1,0 +1,20 @@
+node_modules/
+validation-service/venv/
+validation-service/__pycache__/
+.next/
+.env
+.env.local
+*.log
+
+# Editor / AI tooling — no tool watermarks on GitHub
+.cursor/
+.claude/
+.windsurf/
+.aider*
+.continue/
+.codeium/
+.copilot/
+.cursorrules
+.claudeignore
+.windsurfrules
+**/copilot-instructions.md

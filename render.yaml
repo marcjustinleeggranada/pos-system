@@ -1,0 +1,14 @@
+# Deploy the Python validation service on Render (free tier).
+# Next.js app deploys separately on Vercel — see SECTION_5_NOTES.md
+
+services:
+  - type: web
+    name: pos-validation-service
+    runtime: docker
+    dockerfilePath: ./validation-service/Dockerfile
+    dockerContext: ./validation-service
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 5000
