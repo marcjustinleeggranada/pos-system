@@ -178,8 +178,8 @@ Built on Sections 1–2 without modifying their API files.
 **Supabase Postgres** is already live (`pos-system`, ref `rfkoerdkpgyzoyzrmbxa`).
 
 **Deployment configs added:**
-- `vercel.json` — Next.js on Vercel (`sin1` region)
-- `render.yaml` + `validation-service/Dockerfile` — Python validation on Render (gunicorn)
+- `render.yaml` — Blueprint for **pos-web** (Next.js) + **pos-validation** (Docker/gunicorn) on Render free tier
+- `validation-service/Dockerfile` — Python validation container
 - `sql/008_seed_test_sales.sql` — 25-day test sales for both stores (AI Insights)
 - `SECTION_5_NOTES.md` — step-by-step Vercel + Render deploy guide
 

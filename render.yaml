@@ -1,14 +1,34 @@
-# Deploy the Python validation service on Render (free tier).
-# Next.js app deploys separately on Vercel — see SECTION_5_NOTES.md
+# Render Blueprint — POS web app + Python validation service (free tier)
+# Dashboard: New → Blueprint → connect GitHub repo marcjustinleeggranada/pos-system
 
 services:
+  # Deploy first — Next.js reads this URL via fromService below
   - type: web
-    name: pos-validation-service
+    name: pos-validation
     runtime: docker
+    plan: free
     dockerfilePath: ./validation-service/Dockerfile
     dockerContext: ./validation-service
-    plan: free
     healthCheckPath: /health
+
+  - type: web
+    name: pos-web
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /login
     envVars:
-      - key: PORT
-        value: 5000
+      - key: NODE_VERSION
+        value: 20.18.0
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: VALIDATION_SERVICE_URL
+        fromService:
+          type: web
+          name: pos-validation
+          envVarKey: RENDER_EXTERNAL_URL

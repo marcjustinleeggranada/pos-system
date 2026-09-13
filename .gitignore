@@ -4,6 +4,7 @@ validation-service/__pycache__/
 .next/
 .env
 .env.local
+.env*.local
 *.log
 
 # Editor / AI tooling — no tool watermarks on GitHub

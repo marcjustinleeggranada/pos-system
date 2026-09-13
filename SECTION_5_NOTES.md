@@ -2,7 +2,7 @@
 
 ## What Was Built and Why
 
-Section 5 prepares the multi-tenant POS + AI pipeline for production hosting. The **Next.js** app (Pages Router API routes + UI) deploys to **Vercel** near the Supabase region. The **Python validation service** deploys separately on **Render** via Docker, because Flask/SciPy cannot run on Vercel serverless functions. Supabase Postgres is already live — deployment only requires pointing environment variables at the existing project.
+Section 5 prepares the multi-tenant POS + AI pipeline for production hosting on **Render** (free tier). Both the **Next.js** app and the **Python validation service** deploy from one `render.yaml` Blueprint. Supabase Postgres is already live — deployment only requires pointing secret environment variables at the existing database and API keys.
 
 ---
 
@@ -10,8 +10,7 @@ Section 5 prepares the multi-tenant POS + AI pipeline for production hosting. Th
 
 | File | Purpose |
 |------|---------|
-| `vercel.json` | Vercel project config (Next.js, `sin1` region) |
-| `render.yaml` | Render Blueprint for the validation Docker service |
+| `render.yaml` | Render Blueprint — **pos-web** (Next.js) + **pos-validation** (Docker) |
 | `validation-service/Dockerfile` | Production container for Flask + gunicorn |
 | `sql/008_seed_test_sales.sql` | 25-day test sales for both stores (AI Insights testing) |
 | `SECTION_5_NOTES.md` | This file |
@@ -30,24 +29,23 @@ Section 5 prepares the multi-tenant POS + AI pipeline for production hosting. Th
 
 **Multi-tenancy preserved:** no deployment change affects `store_id` scoping — the JWT still carries `storeId`, and all API routes continue filtering by `req.storeId`.
 
-**Split deployment pattern:**
+**Split deployment pattern (both on Render):**
 
 ```
-Browser → Vercel (Next.js) → Supabase Postgres
+Browser → Render pos-web (Next.js) → Supabase Postgres
                 ↓
-         Render (Python /validate)
+         Render pos-validation (Python /validate)
                 ↓
          Gemini API
 ```
 
-The Next.js backend calls the validation service over HTTP using `VALIDATION_SERVICE_URL`. Both services must be reachable from the public internet for Insights to work in production.
+`VALIDATION_SERVICE_URL` is wired automatically in `render.yaml` via `fromService` → `RENDER_EXTERNAL_URL` on the validation service.
 
 ---
 
 ## Assumptions
 
-- **Vercel** hosts the Next.js app (free hobby tier is sufficient for capstone demo).
-- **Render** free tier hosts the validation service; cold starts (~30s) are acceptable for demo.
+- **Render free tier** hosts both services; cold starts (~30–60s) after idle are acceptable for capstone demo.
 - **Supabase** project `pos-system` (`rfkoerdkpgyzoyzrmbxa`, `ap-southeast-1`) remains the database — use the **pooler** connection string on Vercel.
 - Migrations `001`–`008` have been applied remotely.
 - Test accounts:
@@ -59,9 +57,8 @@ The Next.js backend calls the validation service over HTTP using `VALIDATION_SER
 ## Known Limitations / Unverified Items
 
 - **Render free tier** spins down after inactivity — first `/validate` call after idle may timeout unless the service is warmed up.
-- **Vercel serverless** has a 10s (Hobby) / 60s (Pro) function timeout — the 4-iteration Gemini loop may hit Hobby limits; test after deploy.
 - **CORS** is not configured on the validation service — only server-to-server calls from Next.js are expected (no browser direct access).
-- Actual Vercel + Render deploy was **not executed from this repo** — configs are ready; the owner must connect GitHub and trigger deploy (see steps below).
+- First deploy/build on Render free tier can take several minutes.
 - `npm run build` must **not** run while `npm run dev` is active (corrupts `.next` cache).
 
 ---
@@ -72,29 +69,26 @@ The Next.js backend calls the validation service over HTTP using `VALIDATION_SER
 
 Follow Section 12 in `PROJECT_CONTEXT.md` for commit identity and hygiene rules.
 
-### 2. Deploy validation service (Render)
+### 2. Deploy on Render (one Blueprint, two services)
 
-1. Go to [render.com](https://render.com) → **New** → **Blueprint** → connect the repo.
-2. Render reads `render.yaml` and creates `pos-validation-service`.
-3. After deploy, copy the service URL (e.g. `https://pos-validation-service.onrender.com`).
-4. Verify: `GET https://<your-render-url>/health` → `{"status":"ok"}`.
-
-### 3. Deploy Next.js (Vercel)
-
-1. Go to [vercel.com](https://vercel.com) → **Import** the GitHub repo.
-2. Root directory: `pos-system` (or repo root if monorepo).
-3. Add environment variables:
+1. Go to [render.com](https://render.com) → sign up / log in → **New** → **Blueprint**.
+2. Connect GitHub repo: `marcjustinleeggranada/pos-system`.
+3. Render reads `render.yaml` and creates **pos-validation** + **pos-web**.
+4. When prompted, set these **secret** env vars on **pos-web** (copy from your local `.env.local`):
 
 | Variable | Value |
 |---|---|
 | `DATABASE_URL` | Supabase pooler URI (password URL-encoded) |
-| `JWT_SECRET` | Long random string (same as local or new) |
+| `JWT_SECRET` | Long random string |
 | `GEMINI_API_KEY` | From Google AI Studio |
-| `VALIDATION_SERVICE_URL` | Render service URL (no trailing slash) |
 
-4. Deploy → open the Vercel URL → log in and test `/insights`.
+`VALIDATION_SERVICE_URL` is set automatically — do not override unless debugging.
 
-### 4. Re-seed test sales (optional)
+5. Click **Apply** and wait for both services to finish building (first build ~5–10 min).
+6. Open the **pos-web** URL (e.g. `https://pos-web.onrender.com`) → log in → test `/insights`.
+7. Verify validation: `GET https://<pos-validation-url>/health` → `{"status":"ok"}`.
+
+### 3. Re-seed test sales (optional)
 
 Run `sql/008_seed_test_sales.sql` against Supabase if the database is reset.
 
