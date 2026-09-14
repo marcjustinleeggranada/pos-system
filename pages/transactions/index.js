@@ -45,7 +45,7 @@ export default function TransactionsPage() {
 
         {error && <div className="error-banner">{error}</div>}
 
-        <div className="card">
+        <div className="panel panel-flush">
           {loading ? (
             <p>Loading transactions...</p>
           ) : transactions.length === 0 ? (
@@ -53,15 +53,22 @@ export default function TransactionsPage() {
           ) : (
             transactions.map((tx) => (
               <div key={tx.id} className="tx-row">
-                <div className="tx-summary" onClick={() => toggleExpand(tx.id)}>
+                <button
+                  type="button"
+                  className="tx-summary"
+                  onClick={() => toggleExpand(tx.id)}
+                  aria-expanded={expandedId === tx.id}
+                >
                   <div>
-                    <strong>#{tx.id}</strong> &middot; {formatDate(tx.createdAt)}
-                    <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
-                      {tx.userEmail} &middot; {tx.paymentMethod}
+                    <div className="tx-id">#{tx.id}</div>
+                    <div className="tx-meta">
+                      {formatDate(tx.createdAt)}
+                      <br />
+                      {tx.userEmail}, {tx.paymentMethod}
                     </div>
                   </div>
-                  <div style={{ fontWeight: 600 }}>{formatCurrency(tx.totalAmount)}</div>
-                </div>
+                  <div className="tx-amount">{formatCurrency(tx.totalAmount)}</div>
+                </button>
                 {expandedId === tx.id && (
                   <div className="tx-details">
                     {tx.items.length === 0 ? (

@@ -130,28 +130,34 @@ export default function SalesPage() {
           <div>
             <input
               className="input search-bar"
-              placeholder="Search products..."
+              placeholder="Search by name or SKU"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              aria-label="Search products"
             />
 
             {loading ? (
-              <p>Loading products...</p>
+              <p className="text-muted">Loading products…</p>
             ) : (
               <div className="product-grid">
                 {filtered.map((product) => {
                   const outOfStock = product.stockQuantity <= 0;
+                  const lowStock = !outOfStock && product.stockQuantity <= 5;
                   return (
                     <button
                       key={product.id}
                       type="button"
-                      className={`product-card${outOfStock ? ' out-of-stock' : ''}`}
+                      className={`product-tile${outOfStock ? ' out-of-stock' : ''}`}
                       onClick={() => addToCart(product)}
                       disabled={outOfStock}
                     >
-                      <div>{product.name}</div>
-                      <div className="price">{formatCurrency(product.price)}</div>
-                      <div className="stock">Stock: {product.stockQuantity}</div>
+                      <span className="product-tile-name">{product.name}</span>
+                      <span className="product-tile-price">{formatCurrency(product.price)}</span>
+                      <span
+                        className={`product-tile-stock${lowStock ? ' is-low' : ''}`}
+                      >
+                        {outOfStock ? 'Out of stock' : `${product.stockQuantity} in stock`}
+                      </span>
                     </button>
                   );
                 })}
@@ -159,51 +165,55 @@ export default function SalesPage() {
             )}
           </div>
 
-          <div className="card">
-            <h3 style={{ marginTop: 0 }}>Cart</h3>
+          <aside className="till-drawer" aria-label="Current sale">
+            <h3 className="section-title">Current sale</h3>
             {cart.length === 0 ? (
-              <p style={{ color: '#64748b' }}>Tap a product to add it.</p>
+              <p className="till-empty">Select a product to start a sale.</p>
             ) : (
               cart.map((item) => (
                 <div key={item.productId} className="cart-item">
                   <div>
-                    <div>{item.name}</div>
-                    <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
-                      {formatCurrency(item.price)} each
-                    </div>
+                    <div className="cart-item-name">{item.name}</div>
+                    <div className="cart-item-unit">{formatCurrency(item.price)} each</div>
                   </div>
                   <div className="cart-item-controls">
                     <button
                       type="button"
-                      className="btn btn-secondary"
+                      className="btn btn-secondary btn-icon"
                       onClick={() => updateQuantity(item.productId, -1)}
+                      aria-label={`Decrease ${item.name}`}
                     >
-                      -
+                      −
                     </button>
-                    <span>{item.quantity}</span>
+                    <span className="amount">{item.quantity}</span>
                     <button
                       type="button"
-                      className="btn btn-secondary"
+                      className="btn btn-secondary btn-icon"
                       onClick={() => updateQuantity(item.productId, 1)}
+                      aria-label={`Increase ${item.name}`}
                     >
                       +
                     </button>
                     <button
                       type="button"
-                      className="btn btn-danger"
+                      className="btn btn-danger btn-icon"
                       onClick={() => removeFromCart(item.productId)}
+                      aria-label={`Remove ${item.name}`}
                     >
-                      x
+                      ×
                     </button>
                   </div>
                 </div>
               ))
             )}
 
-            <div className="cart-total">Total: {formatCurrency(cartTotal)}</div>
+            <div className="cart-total-row">
+              <span className="cart-total-label">Total due</span>
+              <span className="cart-total-value">{formatCurrency(cartTotal)}</span>
+            </div>
 
-            <label style={{ display: 'grid', gap: '0.25rem', marginBottom: '0.75rem' }}>
-              Payment method
+            <label className="field">
+              <span className="field-label">Payment method</span>
               <select
                 className="select"
                 value={paymentMethod}
@@ -217,27 +227,24 @@ export default function SalesPage() {
 
             <button
               type="button"
-              className="btn btn-primary"
-              style={{ width: '100%' }}
+              className="btn btn-till btn-block"
               disabled={cart.length === 0 || checkingOut}
               onClick={handleCheckout}
             >
-              {checkingOut ? 'Processing...' : 'Checkout'}
+              {checkingOut ? 'Recording sale…' : 'Complete sale'}
             </button>
-          </div>
+          </aside>
         </div>
 
         {receipt && (
-          <div className="receipt-modal" onClick={() => setReceipt(null)}>
-            <div className="receipt-card" onClick={(e) => e.stopPropagation()}>
-              <h3>Sale complete</h3>
-              <p>Transaction #{receipt.transactionId}</p>
-              <p style={{ fontSize: '1.25rem', fontWeight: 700 }}>
-                {formatCurrency(receipt.totalAmount)}
-              </p>
-              <p style={{ color: '#64748b' }}>Paid via {receipt.paymentMethod}</p>
-              <button type="button" className="btn btn-primary" onClick={() => setReceipt(null)}>
-                Done
+          <div className="receipt-modal" onClick={() => setReceipt(null)} role="dialog" aria-modal="true">
+            <div className="receipt-slip" onClick={(e) => e.stopPropagation()}>
+              <h3>Sale recorded</h3>
+              <p className="receipt-slip-id">Transaction #{receipt.transactionId}</p>
+              <p className="receipt-slip-total">{formatCurrency(receipt.totalAmount)}</p>
+              <p className="receipt-slip-meta">Paid with {receipt.paymentMethod}</p>
+              <button type="button" className="btn btn-till btn-block" onClick={() => setReceipt(null)}>
+                Close
               </button>
             </div>
           </div>

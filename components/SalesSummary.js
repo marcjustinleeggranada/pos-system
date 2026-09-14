@@ -22,8 +22,8 @@ export default function SalesSummary({ summary }) {
 
   return (
     <div className="sales-summary">
-      <div className="card" style={{ marginBottom: '1rem' }}>
-        <h3 style={{ marginTop: 0 }}>Sales overview ({period.label})</h3>
+      <div className="panel section-block">
+        <h3 className="section-title">Sales overview ({period.label})</h3>
         <div className="summary-grid">
           <Metric label="Gross revenue" value={formatCurrency(totals.totalRevenue30d)} />
           <Metric label="Cost of goods sold" value={formatCurrency(totals.totalCogs30d)} />
@@ -47,8 +47,8 @@ export default function SalesSummary({ summary }) {
       </div>
 
       <div className="summary-two-col">
-        <div className="card">
-          <h3 style={{ marginTop: 0 }}>7-day comparison</h3>
+        <div className="panel">
+          <h3 className="section-title">7-day comparison</h3>
           <table>
             <thead>
               <tr>
@@ -78,8 +78,8 @@ export default function SalesSummary({ summary }) {
           </table>
         </div>
 
-        <div className="card">
-          <h3 style={{ marginTop: 0 }}>Payment collection</h3>
+        <div className="panel">
+          <h3 className="section-title">Payment collection</h3>
           {summary.paymentMethods.length === 0 ? (
             <p>No payments recorded.</p>
           ) : (
@@ -107,8 +107,8 @@ export default function SalesSummary({ summary }) {
         </div>
       </div>
 
-      <div className="card" style={{ margin: '1rem 0' }}>
-        <h3 style={{ marginTop: 0 }}>Inventory snapshot</h3>
+      <div className="panel section-block">
+        <h3 className="section-title">Inventory snapshot</h3>
         <div className="summary-grid">
           <Metric label="Units on hand" value={inventory.totalUnitsOnHand} />
           <Metric label="Retail value" value={formatCurrency(inventory.retailValue)} sub="Stock x sell price" />
@@ -128,8 +128,8 @@ export default function SalesSummary({ summary }) {
         )}
       </div>
 
-      <div className="card" style={{ marginBottom: '1rem' }}>
-        <h3 style={{ marginTop: 0 }}>By category</h3>
+      <div className="panel section-block">
+        <h3 className="section-title">By category</h3>
         <div className="table-wrap">
           <table>
             <thead>
@@ -161,8 +161,8 @@ export default function SalesSummary({ summary }) {
       </div>
 
       {summary.subcategoryStats?.length > 0 && (
-        <div className="card" style={{ marginBottom: '1rem' }}>
-          <h3 style={{ marginTop: 0 }}>By subcategory</h3>
+        <div className="panel section-block">
+          <h3 className="section-title">By subcategory</h3>
           <div className="table-wrap">
             <table>
               <thead>
@@ -194,8 +194,8 @@ export default function SalesSummary({ summary }) {
         </div>
       )}
 
-      <div className="card" style={{ marginBottom: '1rem' }}>
-        <h3 style={{ marginTop: 0 }}>By product</h3>
+      <div className="panel section-block">
+        <h3 className="section-title">By product</h3>
         <div className="table-wrap">
           <table>
             <thead>
@@ -231,8 +231,8 @@ export default function SalesSummary({ summary }) {
       </div>
 
       <div className="summary-two-col">
-        <div className="card">
-          <h3 style={{ marginTop: 0 }}>Daily trend</h3>
+        <div className="panel">
+          <h3 className="section-title">Daily trend</h3>
           <div className="table-wrap">
             <table>
               <thead>
@@ -259,8 +259,8 @@ export default function SalesSummary({ summary }) {
           </div>
         </div>
 
-        <div className="card">
-          <h3 style={{ marginTop: 0 }}>Weekly trend</h3>
+        <div className="panel">
+          <h3 className="section-title">Weekly trend</h3>
           <div className="table-wrap">
             <table>
               <thead>

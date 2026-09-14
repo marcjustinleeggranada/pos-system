@@ -118,7 +118,7 @@ export default function ProductsPage() {
           onChange={(e) => setSearch(e.target.value)}
         />
 
-        <div className="card table-wrap">
+        <div className="panel table-wrap">
           {loading ? (
             <p>Loading products...</p>
           ) : filtered.length === 0 ? (

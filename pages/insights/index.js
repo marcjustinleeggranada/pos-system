@@ -57,31 +57,30 @@ export default function InsightsPage() {
     <AuthGuard>
       <Layout>
         <div className="page-header">
-          <h2>AI Insights</h2>
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <h2>Insights</h2>
+          <div className="page-header-actions">
             <button
               type="button"
               className="btn btn-secondary"
               onClick={loadSummary}
               disabled={loadingSummary || running}
             >
-              {loadingSummary ? 'Loading...' : 'Load sales summary'}
+              {loadingSummary ? 'Refreshing…' : 'Refresh summary'}
             </button>
             <button
               type="button"
-              className="btn btn-primary"
+              className="btn btn-till"
               onClick={runAnalysis}
               disabled={running}
             >
-              {running ? 'Running 4-iteration loop...' : 'Run AI analysis'}
+              {running ? 'Running analysis…' : 'Run analysis'}
             </button>
           </div>
         </div>
 
-        <p style={{ color: '#64748b', marginTop: 0 }}>
-          Gemini generates recommendations from your store&apos;s sales data. A Python module
-          statistically validates each one. The loop runs up to 4 iterations and stops early if
-          all recommendations pass.
+        <p className="page-lede">
+          Review sales patterns and run validated stock recommendations. Each suggestion is checked
+          against your transaction history before it appears here.
         </p>
 
         {error && <div className="error-banner">{error}</div>}
@@ -91,27 +90,24 @@ export default function InsightsPage() {
 
         {runResult && (
           <>
-            <div className="card" style={{ marginBottom: '1rem' }}>
-              <h3 style={{ marginTop: 0 }}>
+            <div className="panel section-block">
+              <h3 className="section-title">
                 Validated recommendations ({runResult.validatedRecommendations.length})
               </h3>
               {runResult.validatedRecommendations.length === 0 ? (
-                <p>
-                  No recommendations passed statistical validation. Try recording more sales, then
-                  run again.
+                <p className="text-muted">
+                  Nothing passed validation yet. Record more sales, then run analysis again.
                 </p>
               ) : (
                 runResult.validatedRecommendations.map((rec) => (
                   <div key={rec.id} className="insight-card">
                     <div className="insight-type">{TYPE_LABELS[rec.type] || rec.type}</div>
-                    <h4 style={{ margin: '0.25rem 0' }}>{rec.title}</h4>
-                    <p style={{ margin: '0.25rem 0', color: '#475569' }}>{rec.rationale}</p>
+                    <h4 className="insight-title">{rec.title}</h4>
+                    <p className="insight-rationale">{rec.rationale}</p>
                     <div className="insight-stats">
-                      Test: {rec.validation.test}
-                      {rec.validation.pValue != null && (
-                        <> &middot; p-value: {rec.validation.pValue}</>
-                      )}
-                      <> &middot; Validated in iteration {rec.validation.iterationValidated}</>
+                      {rec.validation.test}
+                      {rec.validation.pValue != null && ` · p=${rec.validation.pValue}`}
+                      {` · iteration ${rec.validation.iterationValidated}`}
                     </div>
                     <div className="insight-stats">{rec.validation.message}</div>
                   </div>
@@ -119,20 +115,20 @@ export default function InsightsPage() {
               )}
             </div>
 
-            <div className="card">
-              <h3 style={{ marginTop: 0 }}>Refinement loop log</h3>
-              <p style={{ color: '#64748b' }}>
-                Completed {runResult.iterationCount} of {runResult.maxIterations} iteration(s)
+            <div className="panel loop-log">
+              <h3 className="section-title">Validation log</h3>
+              <p className="text-muted">
+                {runResult.iterationCount} of {runResult.maxIterations} iterations completed
               </p>
               {runResult.iterations.map((iter) => (
-                <details key={iter.iteration} style={{ marginBottom: '0.75rem' }}>
+                <details key={iter.iteration}>
                   <summary>
-                    Iteration {iter.iteration} — {iter.allPassed ? 'all passed' : 'some failed'}
+                    Iteration {iter.iteration}: {iter.allPassed ? 'all passed' : 'revisions needed'}
                   </summary>
-                  <ul style={{ paddingLeft: '1.25rem' }}>
+                  <ul>
                     {iter.validationResults.map((vr) => (
                       <li key={vr.id}>
-                        {vr.id}: {vr.passed ? 'PASS' : 'FAIL'} ({vr.test}
+                        {vr.id}: {vr.passed ? 'pass' : 'fail'} ({vr.test}
                         {vr.pValue != null ? `, p=${vr.pValue}` : ''})
                       </li>
                     ))}

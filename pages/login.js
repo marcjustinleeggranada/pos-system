@@ -42,14 +42,26 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="login-page">
-      <div className="login-card">
-        <h1>POS Login</h1>
-        <p>Sign in to your store account</p>
-        {error && <div className="error-banner">{error}</div>}
-        <form className="form-grid" onSubmit={handleSubmit}>
-          <label>
-            Email
+    <div className="register-gate">
+      <section className="register-gate-intro" aria-hidden="true">
+        <p className="register-gate-kicker">Point of sale</p>
+        <h1>Open your till</h1>
+        <p className="register-gate-lede">
+          Sign in with your store account to ring up sales, adjust stock, and review
+          transactions.
+        </p>
+      </section>
+
+      <section className="register-gate-panel">
+        <h2 className="register-gate-heading">Sign in</h2>
+        {error && (
+          <div className="notice notice-error" role="alert">
+            {error}
+          </div>
+        )}
+        <form className="form-stack" onSubmit={handleSubmit}>
+          <label className="field">
+            <span className="field-label">Email</span>
             <input
               className="input"
               type="email"
@@ -59,8 +71,8 @@ export default function LoginPage() {
               autoComplete="email"
             />
           </label>
-          <label>
-            Password
+          <label className="field">
+            <span className="field-label">Password</span>
             <input
               className="input"
               type="password"
@@ -70,11 +82,11 @@ export default function LoginPage() {
               autoComplete="current-password"
             />
           </label>
-          <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign in'}
+          <button type="submit" className="btn btn-till btn-block" disabled={loading}>
+            {loading ? 'Signing in…' : 'Open register'}
           </button>
         </form>
-      </div>
+      </section>
     </div>
   );
 }
