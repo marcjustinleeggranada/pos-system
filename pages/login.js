@@ -45,7 +45,7 @@ export default function LoginPage() {
     <div className="register-gate">
       <section className="register-gate-intro" aria-hidden="true">
         <p className="register-gate-kicker">Point of sale</p>
-        <h1>Open your till</h1>
+        <h1>Sign in to your store</h1>
         <p className="register-gate-lede">
           Sign in with your store account to ring up sales, adjust stock, and review
           transactions.
@@ -83,7 +83,7 @@ export default function LoginPage() {
             />
           </label>
           <button type="submit" className="btn btn-till btn-block" disabled={loading}>
-            {loading ? 'Signing in…' : 'Open register'}
+            {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
       </section>
