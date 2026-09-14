@@ -748,6 +748,21 @@ tbody tr:last-child td {
   text-transform: capitalize;
 }
 
+.flavor-picker {
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  padding: var(--space-5);
+  width: min(22rem, 100%);
+}
+
+.flavor-picker h3 {
+  margin: 0 0 var(--space-2);
+}
+
+.flavor-picker .panel-actions {
+  margin-top: 0;
+}
+
 /* ——— Transactions ——— */
 
 .tx-row {

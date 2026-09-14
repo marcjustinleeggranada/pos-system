@@ -3,6 +3,7 @@ import pool from '../../../lib/db';
 
 const { formatProduct } = require('../../../lib/formatProduct');
 const { validateProductCategory, normalizeProductFlavor } = require('../../../lib/categories');
+const { buildVapeProductName } = require('../../../lib/vapeCatalog');
 
 const PRODUCT_COLUMNS = `id, store_id, name, sku, category, subcategory, vape_line, flavor, price, cost, stock_quantity, is_active, created_at, updated_at`;
 
@@ -16,8 +17,8 @@ async function handler(req, res) {
     const { name, price, sku, category, subcategory, vape_line, flavor, cost, stock_quantity } =
       req.body || {};
 
-    if (!name || price === undefined || price === null) {
-      return res.status(400).json({ error: 'name and price are required' });
+    if (price === undefined || price === null) {
+      return res.status(400).json({ error: 'price is required' });
     }
 
     const categoryCheck = validateProductCategory(category, subcategory, vape_line, req.storeId);
@@ -50,7 +51,36 @@ async function handler(req, res) {
       return res.status(400).json({ error: 'stock_quantity must be a non-negative integer' });
     }
 
+    let productName = name ? String(name).trim() : '';
+    if (
+      categoryCheck.subcategory === 'vape' &&
+      categoryCheck.category === 'individual'
+    ) {
+      productName =
+        buildVapeProductName(categoryCheck.vape_line, flavorCheck.flavor) || productName;
+    }
+
+    if (!productName) {
+      return res.status(400).json({ error: 'name is required' });
+    }
+
     try {
+      if (
+        categoryCheck.subcategory === 'vape' &&
+        categoryCheck.vape_line &&
+        flavorCheck.flavor
+      ) {
+        const dupe = await pool.query(
+          `SELECT id FROM products
+           WHERE store_id = $1 AND vape_line = $2 AND LOWER(flavor) = LOWER($3)
+             AND is_active = TRUE AND id <> $4`,
+          [req.storeId, categoryCheck.vape_line, flavorCheck.flavor, productId]
+        );
+        if (dupe.rows.length > 0) {
+          return res.status(409).json({ error: 'This flavor already exists for that product line' });
+        }
+      }
+
       const result = await pool.query(
         `UPDATE products
          SET name = $1, sku = $2, category = $3, subcategory = $4, vape_line = $5, flavor = $6,
@@ -58,7 +88,7 @@ async function handler(req, res) {
          WHERE id = $10 AND store_id = $11 AND is_active = TRUE
          RETURNING ${PRODUCT_COLUMNS}`,
         [
-          String(name).trim(),
+          productName,
           sku ? String(sku).trim() : null,
           categoryCheck.category,
           categoryCheck.subcategory,

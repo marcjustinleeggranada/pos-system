@@ -26,6 +26,7 @@ This file is the **single source of truth** for the project's state, architectur
 - Deployment docs corrected to Render-only (`b9f82e4`)
 - Removed redundant vape/cosmetics subcategory picker — department auto-set from store
 - Cosmetic store hides product line and flavor columns (vape-only fields)
+- Vape shop: product lines on sales grid with flavor picker; inventory is one row per flavor
 
 **In progress / owner actions:**
 - Confirm Render `pos-web` env vars set (`DATABASE_URL`, `JWT_SECRET`, `GEMINI_API_KEY`) and redeploy after each push if auto-deploy is off

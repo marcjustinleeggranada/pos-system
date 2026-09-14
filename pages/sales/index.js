@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import AuthGuard from '../../components/AuthGuard';
 import Layout from '../../components/Layout';
-import { authFetch, formatCurrency } from '../../lib/api';
+import { authFetch, formatCurrency, getUser } from '../../lib/api';
+import { getDepartmentForStore } from '../../lib/categories';
+import { groupProductsByVapeLine } from '../../lib/vapeCatalog';
 
 export default function SalesPage() {
+  const user = getUser();
+  const isVapeStore = getDepartmentForStore(user?.storeId) === 'vape';
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState('');
   const [cart, setCart] = useState([]);
@@ -12,6 +16,8 @@ export default function SalesPage() {
   const [checkingOut, setCheckingOut] = useState(false);
   const [error, setError] = useState('');
   const [receipt, setReceipt] = useState(null);
+  const [flavorPicker, setFlavorPicker] = useState(null);
+  const [selectedFlavorId, setSelectedFlavorId] = useState('');
 
   const loadProducts = useCallback(async () => {
     setLoading(true);
@@ -30,13 +36,28 @@ export default function SalesPage() {
     loadProducts();
   }, [loadProducts]);
 
-  const filtered = useMemo(() => {
+  const vapeLines = useMemo(
+    () => (isVapeStore ? groupProductsByVapeLine(products) : []),
+    [isVapeStore, products]
+  );
+
+  const filteredVapeLines = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return vapeLines;
+    return vapeLines.filter(
+      (line) =>
+        line.vapeLineLabel.toLowerCase().includes(q) ||
+        line.variants.some((v) => (v.flavor || v.name).toLowerCase().includes(q))
+    );
+  }, [vapeLines, search]);
+
+  const filteredProducts = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return products;
     return products.filter(
       (p) =>
         p.name.toLowerCase().includes(q) ||
-        (p.sku && p.sku.toLowerCase().includes(q))
+        (p.categoryLabel && p.categoryLabel.toLowerCase().includes(q))
     );
   }, [products, search]);
 
@@ -62,6 +83,25 @@ export default function SalesPage() {
         },
       ];
     });
+  }
+
+  function openFlavorPicker(line) {
+    setFlavorPicker(line);
+    const firstInStock = line.inStockVariants[0];
+    setSelectedFlavorId(firstInStock ? String(firstInStock.id) : '');
+  }
+
+  function closeFlavorPicker() {
+    setFlavorPicker(null);
+    setSelectedFlavorId('');
+  }
+
+  function confirmFlavorSelection() {
+    if (!flavorPicker || !selectedFlavorId) return;
+    const product = flavorPicker.variants.find((v) => String(v.id) === selectedFlavorId);
+    if (!product) return;
+    addToCart(product);
+    closeFlavorPicker();
   }
 
   function updateQuantity(productId, delta) {
@@ -117,6 +157,10 @@ export default function SalesPage() {
     }
   }
 
+  const selectedVariant = flavorPicker?.variants.find(
+    (v) => String(v.id) === selectedFlavorId
+  );
+
   return (
     <AuthGuard>
       <Layout>
@@ -130,7 +174,9 @@ export default function SalesPage() {
           <div>
             <input
               className="input search-bar"
-              placeholder="Search by name or SKU"
+              placeholder={
+                isVapeStore ? 'Search by product line or flavor...' : 'Search by name or category...'
+              }
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               aria-label="Search products"
@@ -138,9 +184,35 @@ export default function SalesPage() {
 
             {loading ? (
               <p className="text-muted">Loading products…</p>
+            ) : isVapeStore ? (
+              <div className="product-grid">
+                {filteredVapeLines.map((line) => {
+                  const outOfStock = line.totalStock <= 0;
+                  const lowStock = !outOfStock && line.totalStock <= 5;
+                  return (
+                    <button
+                      key={line.vapeLine}
+                      type="button"
+                      className={`product-tile${outOfStock ? ' out-of-stock' : ''}`}
+                      onClick={() => !outOfStock && openFlavorPicker(line)}
+                      disabled={outOfStock}
+                    >
+                      <span className="product-tile-name">{line.vapeLineLabel.split(' (')[0]}</span>
+                      <span className="product-tile-price">{formatCurrency(line.price)}</span>
+                      <span
+                        className={`product-tile-stock${lowStock ? ' is-low' : ''}`}
+                      >
+                        {outOfStock
+                          ? 'Out of stock'
+                          : `${line.inStockVariants.length} flavors in stock`}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             ) : (
               <div className="product-grid">
-                {filtered.map((product) => {
+                {filteredProducts.map((product) => {
                   const outOfStock = product.stockQuantity <= 0;
                   const lowStock = !outOfStock && product.stockQuantity <= 5;
                   return (
@@ -235,6 +307,57 @@ export default function SalesPage() {
             </button>
           </aside>
         </div>
+
+        {flavorPicker && (
+          <div
+            className="receipt-modal"
+            onClick={closeFlavorPicker}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="flavor-picker-title"
+          >
+            <div className="flavor-picker" onClick={(e) => e.stopPropagation()}>
+              <h3 id="flavor-picker-title">Choose flavor</h3>
+              <p className="text-muted">{flavorPicker.vapeLineLabel.split(' (')[0]}</p>
+              {flavorPicker.inStockVariants.length === 0 ? (
+                <p className="text-muted">No flavors in stock for this line.</p>
+              ) : (
+                <label className="field">
+                  <span className="field-label">Flavor</span>
+                  <select
+                    className="select"
+                    value={selectedFlavorId}
+                    onChange={(e) => setSelectedFlavorId(e.target.value)}
+                  >
+                    {flavorPicker.inStockVariants.map((variant) => (
+                      <option key={variant.id} value={variant.id}>
+                        {variant.flavor || variant.name} ({variant.stockQuantity} left)
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              {selectedVariant && (
+                <p className="amount" style={{ margin: '0 0 1rem' }}>
+                  {formatCurrency(selectedVariant.price)}
+                </p>
+              )}
+              <div className="panel-actions">
+                <button
+                  type="button"
+                  className="btn btn-till"
+                  disabled={!selectedFlavorId}
+                  onClick={confirmFlavorSelection}
+                >
+                  Add to sale
+                </button>
+                <button type="button" className="btn btn-secondary" onClick={closeFlavorPicker}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {receipt && (
           <div className="receipt-modal" onClick={() => setReceipt(null)} role="dialog" aria-modal="true">

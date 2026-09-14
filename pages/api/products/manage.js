@@ -3,6 +3,7 @@ import pool from '../../../lib/db';
 
 const { formatProduct } = require('../../../lib/formatProduct');
 const { validateProductCategory, normalizeProductFlavor } = require('../../../lib/categories');
+const { buildVapeProductName } = require('../../../lib/vapeCatalog');
 
 const PRODUCT_COLUMNS = `id, store_id, name, sku, category, subcategory, vape_line, flavor, price, cost, stock_quantity, is_active, created_at, updated_at`;
 
@@ -40,8 +41,8 @@ async function handler(req, res) {
       is_active,
     } = req.body || {};
 
-    if (!name || price === undefined || price === null) {
-      return res.status(400).json({ error: 'name and price are required' });
+    if (price === undefined || price === null) {
+      return res.status(400).json({ error: 'price is required' });
     }
 
     const categoryCheck = validateProductCategory(category, subcategory, vape_line, req.storeId);
@@ -77,14 +78,42 @@ async function handler(req, res) {
     const normalizedSku = sku ? String(sku).trim() : null;
     const activeFlag = is_active === undefined ? true : Boolean(is_active);
 
+    let productName = name ? String(name).trim() : '';
+    if (
+      categoryCheck.subcategory === 'vape' &&
+      categoryCheck.category === 'individual'
+    ) {
+      productName =
+        buildVapeProductName(categoryCheck.vape_line, flavorCheck.flavor) || productName;
+    }
+
+    if (!productName) {
+      return res.status(400).json({ error: 'name is required' });
+    }
+
     try {
+      if (
+        categoryCheck.subcategory === 'vape' &&
+        categoryCheck.vape_line &&
+        flavorCheck.flavor
+      ) {
+        const dupe = await pool.query(
+          `SELECT id FROM products
+           WHERE store_id = $1 AND vape_line = $2 AND LOWER(flavor) = LOWER($3) AND is_active = TRUE`,
+          [req.storeId, categoryCheck.vape_line, flavorCheck.flavor]
+        );
+        if (dupe.rows.length > 0) {
+          return res.status(409).json({ error: 'This flavor already exists for that product line' });
+        }
+      }
+
       const result = await pool.query(
         `INSERT INTO products (store_id, name, sku, category, subcategory, vape_line, flavor, price, cost, stock_quantity, is_active)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
          RETURNING ${PRODUCT_COLUMNS}`,
         [
           req.storeId,
-          String(name).trim(),
+          productName,
           normalizedSku,
           categoryCheck.category,
           categoryCheck.subcategory,

@@ -39,10 +39,11 @@ export default function ProductsPage() {
     return products.filter(
       (p) =>
         p.name.toLowerCase().includes(q) ||
-        (p.sku && p.sku.toLowerCase().includes(q)) ||
-        (p.categoryDisplay && p.categoryDisplay.toLowerCase().includes(q)) ||
-        (p.categoryLabel && p.categoryLabel.toLowerCase().includes(q)) ||
-        (isVapeStore && p.flavor && p.flavor.toLowerCase().includes(q))
+        (p.vapeLineLabel && p.vapeLineLabel.toLowerCase().includes(q)) ||
+        (isVapeStore && p.flavor && p.flavor.toLowerCase().includes(q)) ||
+        (!isVapeStore &&
+          p.categoryLabel &&
+          p.categoryLabel.toLowerCase().includes(q))
     );
   }, [products, search]);
 
@@ -107,7 +108,7 @@ export default function ProductsPage() {
         <div className="page-header">
           <h2>Products</h2>
           <button type="button" className="btn btn-primary" onClick={openAddPanel}>
-            Add product
+            {isVapeStore ? 'Add flavor' : 'Add product'}
           </button>
         </div>
 
@@ -117,7 +118,7 @@ export default function ProductsPage() {
           className="input search-bar"
           placeholder={
             isVapeStore
-              ? 'Search by name, SKU, category, or flavor...'
+              ? 'Search by product line or flavor...'
               : 'Search by name or category...'
           }
           value={search}
@@ -133,11 +134,15 @@ export default function ProductsPage() {
             <table>
               <thead>
                 <tr>
-                  <th>Name</th>
-                  {isVapeStore && <th>SKU</th>}
-                  <th>Category</th>
-                  {isVapeStore && <th>Product line</th>}
-                  {isVapeStore && <th>Flavor</th>}
+                  {isVapeStore ? (
+                    <>
+                      <th>Product line</th>
+                      <th>Flavor</th>
+                    </>
+                  ) : (
+                    <th>Name</th>
+                  )}
+                  {!isVapeStore && <th>Category</th>}
                   <th>Price</th>
                   <th>Stock</th>
                   <th>Actions</th>
@@ -146,13 +151,17 @@ export default function ProductsPage() {
               <tbody>
                 {filtered.map((product) => (
                   <tr key={product.id}>
-                    <td>{product.name}</td>
-                    {isVapeStore && <td>{product.sku || '-'}</td>}
-                    <td>{product.categoryLabel || product.category || '-'}</td>
-                    {isVapeStore && (
-                      <td>{product.vapeLineLabel || product.vapeLine || '-'}</td>
+                    {isVapeStore ? (
+                      <>
+                        <td>{product.vapeLineLabel || product.vapeLine || '-'}</td>
+                        <td>{product.flavor || '-'}</td>
+                      </>
+                    ) : (
+                      <td>{product.name}</td>
                     )}
-                    {isVapeStore && <td>{product.flavor || '-'}</td>}
+                    {!isVapeStore && (
+                      <td>{product.categoryLabel || product.category || '-'}</td>
+                    )}
                     <td>{formatCurrency(product.price)}</td>
                     <td>{product.stockQuantity}</td>
                     <td>
@@ -181,7 +190,15 @@ export default function ProductsPage() {
         {panelOpen && (
           <div className="overlay-backdrop" onClick={closePanel}>
             <div className="slide-panel" onClick={(e) => e.stopPropagation()}>
-              <h3>{editingProduct ? 'Edit product' : 'Add product'}</h3>
+              <h3>
+                {editingProduct
+                  ? isVapeStore
+                    ? 'Edit flavor'
+                    : 'Edit product'
+                  : isVapeStore
+                    ? 'Add flavor'
+                    : 'Add product'}
+              </h3>
               <ProductForm
                 product={editingProduct}
                 storeId={user?.storeId}
