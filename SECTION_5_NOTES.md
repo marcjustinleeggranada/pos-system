@@ -85,8 +85,21 @@ Follow Section 12 in `PROJECT_CONTEXT.md` for commit identity and hygiene rules.
 `VALIDATION_SERVICE_URL` is set automatically — do not override unless debugging.
 
 5. Click **Apply** and wait for both services to finish building (first build ~5–10 min).
-6. Open the **pos-web** URL (e.g. `https://pos-web.onrender.com`) → log in → test `/insights`.
-7. Verify validation: `GET https://<pos-validation-url>/health` → `{"status":"ok"}`.
+6. Open the **pos-web** URL from the Render dashboard → log in → test `/insights`.
+7. Verify web DB: `GET https://<pos-web-url>/api/health` → `{"status":"ok","db":"connected"}`.
+8. Verify validation: `GET https://<pos-validation-url>/health` → `{"status":"ok"}`.
+
+### Render troubleshooting — "Internal server error" on login
+
+This almost always means **pos-web cannot reach Supabase**. The login page loads, but `POST /api/auth/login` returns 500.
+
+1. Render dashboard → **pos-web** → **Environment** → confirm all three secrets are set (not blank, not placeholders):
+   - `DATABASE_URL` — copy the **full pooler URI** from your working `.env.local` (password must use `%40` for `@`)
+   - `JWT_SECRET`
+   - `GEMINI_API_KEY`
+2. After saving env vars, click **Manual Deploy** → **Deploy latest commit**.
+3. Test `GET /api/health` on your pos-web URL. If you see `"db":"connection failed"`, the `DATABASE_URL` is still wrong.
+4. **Free tier cold start:** services sleep after ~15 min idle. First phone visit can take **30–60 seconds** — wait and refresh once before assuming it's broken.
 
 ### 3. Re-seed test sales (optional)
 
