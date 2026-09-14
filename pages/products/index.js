@@ -3,9 +3,11 @@ import AuthGuard from '../../components/AuthGuard';
 import Layout from '../../components/Layout';
 import ProductForm from '../../components/ProductForm';
 import { authFetch, formatCurrency, getUser } from '../../lib/api';
+import { getDepartmentForStore } from '../../lib/categories';
 
 export default function ProductsPage() {
   const user = getUser();
+  const isVapeStore = getDepartmentForStore(user?.storeId) === 'vape';
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
@@ -40,7 +42,7 @@ export default function ProductsPage() {
         (p.sku && p.sku.toLowerCase().includes(q)) ||
         (p.categoryDisplay && p.categoryDisplay.toLowerCase().includes(q)) ||
         (p.categoryLabel && p.categoryLabel.toLowerCase().includes(q)) ||
-        (p.flavor && p.flavor.toLowerCase().includes(q))
+        (isVapeStore && p.flavor && p.flavor.toLowerCase().includes(q))
     );
   }, [products, search]);
 
