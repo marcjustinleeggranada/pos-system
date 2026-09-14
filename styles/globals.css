@@ -590,6 +590,7 @@ tbody tr:last-child td {
   display: grid;
   gap: var(--space-2);
   min-height: 5.5rem;
+  align-content: start;
 }
 
 .product-tile:hover:not(:disabled) {
@@ -625,6 +626,35 @@ tbody tr:last-child td {
 
 .product-tile-stock.is-low {
   color: var(--danger-ink);
+}
+
+.vape-line-specs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.vape-line-specs li {
+  font-size: 0.6875rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.vape-line-specs li::before {
+  content: '·';
+  margin-right: 0.35rem;
+  color: var(--till);
+}
+
+.flavor-picker-line-name {
+  margin: 0 0 var(--space-2);
+  font-weight: 500;
+}
+
+.flavor-picker-specs {
+  margin-bottom: var(--space-4);
 }
 
 .cart-item {

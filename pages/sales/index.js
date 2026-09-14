@@ -3,6 +3,7 @@ import AuthGuard from '../../components/AuthGuard';
 import Layout from '../../components/Layout';
 import { authFetch, formatCurrency, getUser } from '../../lib/api';
 import { getDepartmentForStore } from '../../lib/categories';
+import VapeLineSpecs from '../../components/VapeLineSpecs';
 import { groupProductsByVapeLine } from '../../lib/vapeCatalog';
 
 export default function SalesPage() {
@@ -197,7 +198,8 @@ export default function SalesPage() {
                       onClick={() => !outOfStock && openFlavorPicker(line)}
                       disabled={outOfStock}
                     >
-                      <span className="product-tile-name">{line.vapeLineLabel.split(' (')[0]}</span>
+                      <span className="product-tile-name">{line.vapeLineShortName}</span>
+                      <VapeLineSpecs vapeLine={line.vapeLine} />
                       <span className="product-tile-price">{formatCurrency(line.price)}</span>
                       <span
                         className={`product-tile-stock${lowStock ? ' is-low' : ''}`}
@@ -318,7 +320,8 @@ export default function SalesPage() {
           >
             <div className="flavor-picker" onClick={(e) => e.stopPropagation()}>
               <h3 id="flavor-picker-title">Choose flavor</h3>
-              <p className="text-muted">{flavorPicker.vapeLineLabel.split(' (')[0]}</p>
+              <p className="flavor-picker-line-name">{flavorPicker.vapeLineShortName}</p>
+              <VapeLineSpecs vapeLine={flavorPicker.vapeLine} className="flavor-picker-specs" />
               {flavorPicker.inStockVariants.length === 0 ? (
                 <p className="text-muted">No flavors in stock for this line.</p>
               ) : (

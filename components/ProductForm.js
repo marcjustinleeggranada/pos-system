@@ -5,6 +5,7 @@ import {
   getVapeLineOptions,
   isKnownCategory,
 } from '../lib/categories';
+import VapeLineSpecs from './VapeLineSpecs';
 import { buildVapeProductName, getDefaultPriceForLine } from '../lib/vapeCatalog';
 
 const emptyForm = {
@@ -136,6 +137,7 @@ export default function ProductForm({ product, onSave, onCancel, saving, storeId
             ))}
           </select>
         </label>
+        {form.vape_line && <VapeLineSpecs vapeLine={form.vape_line} />}
         <label>
           Flavor *
           <input
