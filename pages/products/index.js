@@ -115,7 +115,11 @@ export default function ProductsPage() {
 
         <input
           className="input search-bar"
-          placeholder="Search by name, SKU, category, or flavor..."
+          placeholder={
+            isVapeStore
+              ? 'Search by name, SKU, category, or flavor...'
+              : 'Search by name, SKU, or category...'
+          }
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -132,8 +136,8 @@ export default function ProductsPage() {
                   <th>Name</th>
                   <th>SKU</th>
                   <th>Category</th>
-                  <th>Product line</th>
-                  <th>Flavor</th>
+                  {isVapeStore && <th>Product line</th>}
+                  {isVapeStore && <th>Flavor</th>}
                   <th>Price</th>
                   <th>Stock</th>
                   <th>Actions</th>
@@ -145,8 +149,10 @@ export default function ProductsPage() {
                     <td>{product.name}</td>
                     <td>{product.sku || '-'}</td>
                     <td>{product.categoryLabel || product.category || '-'}</td>
-                    <td>{product.vapeLineLabel || product.vapeLine || '-'}</td>
-                    <td>{product.flavor || '-'}</td>
+                    {isVapeStore && (
+                      <td>{product.vapeLineLabel || product.vapeLine || '-'}</td>
+                    )}
+                    {isVapeStore && <td>{product.flavor || '-'}</td>}
                     <td>{formatCurrency(product.price)}</td>
                     <td>{product.stockQuantity}</td>
                     <td>
