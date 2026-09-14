@@ -35,7 +35,7 @@ This file is the **single source of truth** for the project's state, architectur
 - Free tier Render services sleep after ~15 min idle (first load slow)
 - Insights requires validation service reachable (`VALIDATION_SERVICE_URL` wired in Render Blueprint)
 
-**Next task:** Manual Deploy pos-web on Render after subcategory UI removal push.
+**Next task:** Manual Deploy pos-web on Render after cosmetic UI cleanup push.
 
 ---
 

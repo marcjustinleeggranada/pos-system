@@ -118,7 +118,7 @@ export default function SalesSummary({ summary }) {
             value={formatCurrency(inventory.potentialGrossProfit)}
             sub="If all on-hand stock sold at current price"
           />
-          <Metric label="Low-stock SKUs" value={inventory.lowStockCount} />
+          <Metric label="Low-stock products" value={inventory.lowStockCount} />
         </div>
         {summary.lowStockProducts.length > 0 && (
           <p className="summary-note">

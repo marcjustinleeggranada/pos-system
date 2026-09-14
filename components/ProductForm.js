@@ -102,10 +102,12 @@ export default function ProductForm({ product, onSave, onCancel, saving, storeId
           required
         />
       </label>
-      <label>
-        SKU
-        <input className="input" value={form.sku} onChange={handleChange('sku')} />
-      </label>
+      {storeDepartment === 'vape' && (
+        <label>
+          SKU
+          <input className="input" value={form.sku} onChange={handleChange('sku')} />
+        </label>
+      )}
       <label>
         Category *
         <select className="input" value={form.category} onChange={handleCategoryChange} required>

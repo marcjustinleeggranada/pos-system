@@ -118,7 +118,7 @@ export default function ProductsPage() {
           placeholder={
             isVapeStore
               ? 'Search by name, SKU, category, or flavor...'
-              : 'Search by name, SKU, or category...'
+              : 'Search by name or category...'
           }
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -134,7 +134,7 @@ export default function ProductsPage() {
               <thead>
                 <tr>
                   <th>Name</th>
-                  <th>SKU</th>
+                  {isVapeStore && <th>SKU</th>}
                   <th>Category</th>
                   {isVapeStore && <th>Product line</th>}
                   {isVapeStore && <th>Flavor</th>}
@@ -147,7 +147,7 @@ export default function ProductsPage() {
                 {filtered.map((product) => (
                   <tr key={product.id}>
                     <td>{product.name}</td>
-                    <td>{product.sku || '-'}</td>
+                    {isVapeStore && <td>{product.sku || '-'}</td>}
                     <td>{product.categoryLabel || product.category || '-'}</td>
                     {isVapeStore && (
                       <td>{product.vapeLineLabel || product.vapeLine || '-'}</td>
