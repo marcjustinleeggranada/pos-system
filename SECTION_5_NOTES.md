@@ -46,7 +46,7 @@ Browser → Render pos-web (Next.js) → Supabase Postgres
 ## Assumptions
 
 - **Render free tier** hosts both services; cold starts (~30–60s) after idle are acceptable for capstone demo.
-- **Supabase** project `pos-system` (`rfkoerdkpgyzoyzrmbxa`, `ap-southeast-1`) remains the database — use the **pooler** connection string on Vercel.
+- **Supabase** project `pos-system` (`rfkoerdkpgyzoyzrmbxa`, `ap-southeast-1`) remains the database — use the **pooler** connection string on Render.
 - Migrations `001`–`008` have been applied remotely.
 - Test accounts:
   - Vape: `owner@vape.com` / `password123` (store 1)

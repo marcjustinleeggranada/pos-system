@@ -181,7 +181,7 @@ Built on Sections 1–2 without modifying their API files.
 - `render.yaml` — Blueprint for **pos-web** (Next.js) + **pos-validation** (Docker/gunicorn) on Render free tier
 - `validation-service/Dockerfile` — Python validation container
 - `sql/008_seed_test_sales.sql` — 25-day test sales for both stores (AI Insights)
-- `SECTION_5_NOTES.md` — step-by-step Vercel + Render deploy guide
+- `SECTION_5_NOTES.md` — step-by-step Render deploy guide
 
 **Test accounts:**
 - Vape shop (store 1): `owner@vape.com` / `password123`
