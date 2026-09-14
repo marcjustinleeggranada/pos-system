@@ -4,6 +4,36 @@ This file is the **single source of truth** for the project's state, architectur
 
 ---
 
+## Current session state
+
+**Last updated:** 2026-09-15
+
+| Field | Value |
+|---|---|
+| **Branch** | `main` |
+| **Repo** | `marcjustinleeggranada/pos-system` |
+| **Deployment** | Render: `pos-web` + `pos-validation` (free tier). Vercel abandoned. |
+| **Database** | Supabase `rfkoerdkpgyzoyzrmbxa` (ap-southeast-1) |
+
+**Recently completed:**
+- Sections 1–5 code complete; GitHub repo live
+- UI redesign: register theme, IBM Plex, sidebar + mobile bottom nav, till drawer
+- Login copy: "Sign in to your store"
+- Render DB fix: `lib/db.js` uses `ssl: { rejectUnauthorized: false }` — do not append `sslmode=require` to `DATABASE_URL`
+- `/api/health` endpoint for Render DB connectivity checks
+
+**In progress / owner actions:**
+- Confirm Render `pos-web` env vars set (`DATABASE_URL`, `JWT_SECRET`, `GEMINI_API_KEY`) and redeploy after each push if auto-deploy is off
+- Test live site on phone via Render URL
+
+**Known issues:**
+- Free tier Render services sleep after ~15 min idle (first load slow)
+- Insights requires validation service reachable (`VALIDATION_SERVICE_URL` wired in Render Blueprint)
+
+**Next task:** *(update this line each session)*
+
+---
+
 ## 1. Project Overview
 
 **Working title:** Integrating Analytical AI with Point-of-Sale Systems for Small Businesses
@@ -214,6 +244,46 @@ Also: after finishing each section, **update `PROJECT_CONTEXT.md`** (this file) 
 6. **After finishing a section:** generate `SECTION_N_NOTES.md`, update this file (mark section DONE, append file list), and list exact file paths created.
 7. **Preserve multi-tenancy:** every tenant query must filter by `req.storeId` from the JWT — never a client-supplied store ID.
 8. **Follow Section 12** for all GitHub work, commit attribution, and repo hygiene — no exceptions.
+9. **Follow Section 13** at the start and end of every session — local or remote — so all environments stay in sync.
+
+## 13. Multi-session sync (local ↔ remote — MANDATORY)
+
+Chat/conversation history **does not** sync between machines or tools. **Git + this file do.** Every session must follow this protocol automatically.
+
+### Before any code changes
+
+1. `git pull origin main`
+2. Read this file — especially **Current session state** above
+3. Read the relevant `SECTION_N_NOTES.md` for the area being changed
+
+### After any code changes (before ending the session)
+
+1. Update **Current session state** in this file:
+   - `Last updated` date
+   - Recently completed (bullet list)
+   - In progress / owner actions
+   - Known issues
+   - **Next task** (one line — what the next session should pick up)
+2. If architecture, endpoints, or env vars changed → update the matching section above and/or `SECTION_N_NOTES.md`
+3. Review `git status` — no secrets, no tool watermark folders (Section 12)
+4. Commit and **push to `main`** (unless the owner explicitly asked for a feature branch)
+5. Note in **Current session state** whether Render **pos-web** needs a Manual Deploy
+
+### Branch policy
+
+- Default branch: **`main`**
+- Do not leave completed work unpushed at session end
+- After pulling on another machine: `git pull` then continue
+
+### Render deploy reminder
+
+Pushing to GitHub does not always redeploy Render. After pushes that affect production, check Render dashboard or trigger **Manual Deploy** on **pos-web**.
+
+### Remote/cloud development
+
+Remote agents clone from GitHub — they only see what is pushed. Secrets (`DATABASE_URL`, `JWT_SECRET`, `GEMINI_API_KEY`) live in Render dashboard and local `.env.local`, not in the repo.
+
+---
 
 ## 12. GitHub, Attribution, and Repo Hygiene (MANDATORY)
 
@@ -277,7 +347,7 @@ Write commit messages like a normal developer would — short, factual, focused 
 When you finish work and update handoff docs:
 
 1. Keep `PROJECT_CONTEXT.md` and `SECTION_N_NOTES.md` tool-neutral (see Section 10).
-2. **Copy forward this entire Section 12** — do not delete or shorten these attribution rules. The next developer must inherit the same GitHub and hygiene requirements.
+2. **Copy forward Sections 12 and 13** — do not delete or shorten these rules. The next developer must inherit the same GitHub, hygiene, and session-sync requirements.
 3. Do not add README badges, "built with X AI", or contributor notes that reveal automated tooling.
 
 ### Quick checklist before push
