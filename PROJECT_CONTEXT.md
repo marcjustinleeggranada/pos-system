@@ -6,7 +6,7 @@ This file is the **single source of truth** for the project's state, architectur
 
 ## Current session state
 
-**Last updated:** 2026-09-14
+**Last updated:** 2026-09-15
 
 | Field | Value |
 |---|---|
@@ -14,7 +14,7 @@ This file is the **single source of truth** for the project's state, architectur
 | **Repo** | `marcjustinleeggranada/pos-system` |
 | **Deployment** | Render: `pos-web` + `pos-validation` (free tier). Vercel abandoned. |
 | **Database** | Supabase `rfkoerdkpgyzoyzrmbxa` (ap-southeast-1) |
-| **Render redeploy** | Not needed — docs-only change this session |
+| **Render redeploy** | Needed after this push (product UI change) |
 
 **Recently completed:**
 - Sections 1–5 code complete; GitHub repo live
@@ -24,6 +24,7 @@ This file is the **single source of truth** for the project's state, architectur
 - `/api/health` endpoint for Render DB connectivity checks
 - Section 13 multi-session sync protocol added to handoff doc (`030e15f`)
 - Deployment docs corrected to Render-only (`b9f82e4`)
+- Removed redundant vape/cosmetics subcategory picker — department auto-set from store
 
 **In progress / owner actions:**
 - Confirm Render `pos-web` env vars set (`DATABASE_URL`, `JWT_SECRET`, `GEMINI_API_KEY`) and redeploy after each push if auto-deploy is off
@@ -33,7 +34,7 @@ This file is the **single source of truth** for the project's state, architectur
 - Free tier Render services sleep after ~15 min idle (first load slow)
 - Insights requires validation service reachable (`VALIDATION_SERVICE_URL` wired in Render Blueprint)
 
-**Next task:** Awaiting owner direction — pick up post-Section-5 work (pilot testing, evaluation, handover docs, or bug fixes reported from live Render testing).
+**Next task:** Manual Deploy pos-web on Render after subcategory UI removal push.
 
 ---
 

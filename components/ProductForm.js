@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   getCategoryOptions,
-  getSubcategoryOptions,
+  getDepartmentForStore,
   getVapeLineOptions,
   isKnownCategory,
 } from '../lib/categories';
@@ -18,19 +18,16 @@ const emptyForm = {
   stock_quantity: '0',
 };
 
-export default function ProductForm({ product, onSave, onCancel, saving }) {
+export default function ProductForm({ product, onSave, onCancel, saving, storeId }) {
   const [form, setForm] = useState(emptyForm);
   const [legacyCategory, setLegacyCategory] = useState(null);
 
+  const storeDepartment = useMemo(() => getDepartmentForStore(storeId), [storeId]);
   const categoryOptions = useMemo(() => getCategoryOptions(), []);
-  const subcategoryOptions = useMemo(
-    () => (form.category ? getSubcategoryOptions(form.category) : []),
-    [form.category]
-  );
   const vapeLineOptions = useMemo(() => getVapeLineOptions(), []);
 
   const showVapeFields =
-    form.category === 'individual' && form.subcategory === 'vape';
+    form.category === 'individual' && storeDepartment === 'vape';
 
   useEffect(() => {
     if (product) {
@@ -49,9 +46,12 @@ export default function ProductForm({ product, onSave, onCancel, saving }) {
       });
     } else {
       setLegacyCategory(null);
-      setForm(emptyForm);
+      setForm({
+        ...emptyForm,
+        subcategory: storeDepartment || '',
+      });
     }
-  }, [product]);
+  }, [product, storeDepartment]);
 
   function handleChange(field) {
     return (e) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
@@ -62,21 +62,11 @@ export default function ProductForm({ product, onSave, onCancel, saving }) {
     setForm((prev) => ({
       ...prev,
       category,
-      subcategory: '',
+      subcategory: storeDepartment || '',
       vape_line: '',
       flavor: '',
     }));
     setLegacyCategory(null);
-  }
-
-  function handleSubcategoryChange(e) {
-    const subcategory = e.target.value;
-    setForm((prev) => ({
-      ...prev,
-      subcategory,
-      vape_line: '',
-      flavor: subcategory === 'vape' ? prev.flavor : '',
-    }));
   }
 
   function handleSubmit(e) {
@@ -86,7 +76,7 @@ export default function ProductForm({ product, onSave, onCancel, saving }) {
       price: Number(form.price),
       sku: form.sku.trim() || undefined,
       category: form.category,
-      subcategory: form.subcategory,
+      subcategory: storeDepartment,
       vape_line: showVapeFields ? form.vape_line || undefined : undefined,
       flavor: showVapeFields ? form.flavor.trim() || undefined : undefined,
       cost: form.cost === '' ? undefined : Number(form.cost),
@@ -127,25 +117,6 @@ export default function ProductForm({ product, onSave, onCancel, saving }) {
           ))}
         </select>
       </label>
-      <label>
-        Subcategory *
-        <select
-          className="input"
-          value={form.subcategory}
-          onChange={handleSubcategoryChange}
-          required
-          disabled={!form.category}
-        >
-          <option value="">
-            {form.category ? 'Select subcategory...' : 'Select a category first'}
-          </option>
-          {subcategoryOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-      </label>
       {showVapeFields && (
         <>
           <label>
@@ -177,8 +148,8 @@ export default function ProductForm({ product, onSave, onCancel, saving }) {
       )}
       {legacyCategory && (
         <p className="summary-note" style={{ gridColumn: '1 / -1', margin: 0 }}>
-          This product uses a legacy category (&quot;{legacyCategory}&quot;). Choose a category and
-          subcategory above to update it.
+          This product uses a legacy category (&quot;{legacyCategory}&quot;). Choose a category above
+          to update it.
         </p>
       )}
       <label>

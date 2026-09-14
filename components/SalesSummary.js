@@ -160,40 +160,6 @@ export default function SalesSummary({ summary }) {
         </div>
       </div>
 
-      {summary.subcategoryStats?.length > 0 && (
-        <div className="panel section-block">
-          <h3 className="section-title">By subcategory</h3>
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Category</th>
-                  <th>Subcategory</th>
-                  <th>Products</th>
-                  <th>Units sold</th>
-                  <th>Revenue</th>
-                  <th>Gross profit</th>
-                  <th>Margin</th>
-                </tr>
-              </thead>
-              <tbody>
-                {summary.subcategoryStats.map((s) => (
-                  <tr key={`${s.category}-${s.subcategory}`}>
-                    <td>{s.categoryLabel || s.category}</td>
-                    <td>{s.subcategoryLabel || s.subcategory || '-'}</td>
-                    <td>{s.productCount}</td>
-                    <td>{s.unitsSold}</td>
-                    <td>{formatCurrency(s.revenue)}</td>
-                    <td>{s.grossProfit != null ? formatCurrency(s.grossProfit) : 'N/A'}</td>
-                    <td>{pct(s.profitMarginPct)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
       <div className="panel section-block">
         <h3 className="section-title">By product</h3>
         <div className="table-wrap">
@@ -202,7 +168,6 @@ export default function SalesSummary({ summary }) {
               <tr>
                 <th>Product</th>
                 <th>Category</th>
-                <th>Subcategory</th>
                 <th>Units sold</th>
                 <th>Revenue</th>
                 <th>COGS</th>
@@ -215,8 +180,7 @@ export default function SalesSummary({ summary }) {
               {summary.productStats.map((p) => (
                 <tr key={p.productId}>
                   <td>{p.name}</td>
-                  <td>{p.categoryLabel || p.category}</td>
-                  <td>{p.subcategoryLabel || p.subcategory || '-'}</td>
+                  <td>{p.categoryDisplay || p.categoryLabel || p.category}</td>
                   <td>{p.totalUnitsSold}</td>
                   <td>{formatCurrency(p.totalRevenue)}</td>
                   <td>{p.totalCogs != null ? formatCurrency(p.totalCogs) : 'N/A'}</td>

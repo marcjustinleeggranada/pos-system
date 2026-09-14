@@ -44,7 +44,7 @@ async function handler(req, res) {
       return res.status(400).json({ error: 'name and price are required' });
     }
 
-    const categoryCheck = validateProductCategory(category, subcategory, vape_line);
+    const categoryCheck = validateProductCategory(category, subcategory, vape_line, req.storeId);
     if (!categoryCheck.ok) {
       return res.status(400).json({ error: categoryCheck.error });
     }

@@ -2,9 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import AuthGuard from '../../components/AuthGuard';
 import Layout from '../../components/Layout';
 import ProductForm from '../../components/ProductForm';
-import { authFetch, formatCurrency } from '../../lib/api';
+import { authFetch, formatCurrency, getUser } from '../../lib/api';
 
 export default function ProductsPage() {
+  const user = getUser();
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
@@ -39,7 +40,6 @@ export default function ProductsPage() {
         (p.sku && p.sku.toLowerCase().includes(q)) ||
         (p.categoryDisplay && p.categoryDisplay.toLowerCase().includes(q)) ||
         (p.categoryLabel && p.categoryLabel.toLowerCase().includes(q)) ||
-        (p.subcategoryLabel && p.subcategoryLabel.toLowerCase().includes(q)) ||
         (p.flavor && p.flavor.toLowerCase().includes(q))
     );
   }, [products, search]);
@@ -113,7 +113,7 @@ export default function ProductsPage() {
 
         <input
           className="input search-bar"
-          placeholder="Search by name, SKU, category, or subcategory..."
+          placeholder="Search by name, SKU, category, or flavor..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -130,7 +130,6 @@ export default function ProductsPage() {
                   <th>Name</th>
                   <th>SKU</th>
                   <th>Category</th>
-                  <th>Subcategory</th>
                   <th>Product line</th>
                   <th>Flavor</th>
                   <th>Price</th>
@@ -144,7 +143,6 @@ export default function ProductsPage() {
                     <td>{product.name}</td>
                     <td>{product.sku || '-'}</td>
                     <td>{product.categoryLabel || product.category || '-'}</td>
-                    <td>{product.subcategoryLabel || product.subcategory || '-'}</td>
                     <td>{product.vapeLineLabel || product.vapeLine || '-'}</td>
                     <td>{product.flavor || '-'}</td>
                     <td>{formatCurrency(product.price)}</td>
@@ -178,6 +176,7 @@ export default function ProductsPage() {
               <h3>{editingProduct ? 'Edit product' : 'Add product'}</h3>
               <ProductForm
                 product={editingProduct}
+                storeId={user?.storeId}
                 onSave={handleSave}
                 onCancel={closePanel}
                 saving={saving}
