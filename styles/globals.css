@@ -502,6 +502,14 @@ select {
   margin-bottom: var(--space-4);
 }
 
+.success-banner {
+  background: var(--ok-bg);
+  border: 1px solid #c5d9cb;
+  color: var(--ok-ink);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
 /* ——— Tables ——— */
 
 .table-wrap {

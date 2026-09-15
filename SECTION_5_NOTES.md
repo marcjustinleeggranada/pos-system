@@ -103,7 +103,11 @@ This almost always means **pos-web cannot reach Supabase**. The login page loads
 
 ### 3. Re-seed test sales (optional)
 
-Run `sql/008_seed_test_sales.sql` against Supabase if the database is reset.
+Three options:
+
+1. **Insights page (owner only):** open `/insights` with fewer than 10 transactions in the last 30 days → **Add demo sales** (appends) or **Replace with demo sales**.
+2. **CLI (both stores):** `npm run seed:insights-sales` (reads `DATABASE_URL` from `.env.local`). Pass `--replace` to clear each store's sales first.
+3. **SQL:** run `sql/008_seed_test_sales.sql` against Supabase (clears all transactions for both stores, then seeds).
 
 ---
 

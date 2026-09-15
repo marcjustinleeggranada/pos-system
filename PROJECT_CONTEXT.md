@@ -10,33 +10,28 @@ This file is the **single source of truth** for the project's state, architectur
 
 | Field | Value |
 |---|---|
-| **Branch** | `main` (synced to `030e15f`) |
+| **Branch** | `main` |
 | **Repo** | `marcjustinleeggranada/pos-system` |
 | **Deployment** | Render: `pos-web` + `pos-validation` (free tier). Vercel abandoned. |
 | **Database** | Supabase `rfkoerdkpgyzoyzrmbxa` (ap-southeast-1) |
-| **Render redeploy** | Needed after this push (product UI change) |
+| **Render redeploy** | Needed after this push (demo sales seed + Insights UI) |
 
 **Recently completed:**
-- Sections 1–5 code complete; GitHub repo live
-- UI redesign: register theme, IBM Plex, sidebar + mobile bottom nav, till drawer
-- Login copy: "Sign in to your store"
-- Render DB fix: `lib/db.js` uses `ssl: { rejectUnauthorized: false }` — do not append `sslmode=require` to `DATABASE_URL`
-- `/api/health` endpoint for Render DB connectivity checks
-- Section 13 multi-session sync protocol added to handoff doc (`030e15f`)
-- Deployment docs corrected to Render-only (`b9f82e4`)
-- Removed redundant vape/cosmetics subcategory picker — department auto-set from store
-- Cosmetic store hides product line and flavor columns (vape-only fields)
-- Vape shop: product lines on sales grid with flavor picker; inventory is one row per flavor
+- Demo sales seeder for AI Insights: `lib/seedInsightsSales.js`, owner API `POST /api/admin/seed-insights-sales`, CLI `npm run seed:insights-sales`
+- Insights page: owners with fewer than 10 transactions see **Add demo sales** / **Replace with demo sales**
+- Vape + cosmetic patterns: rising/declining SKUs and co-purchase pairs (matches `sql/008_seed_test_sales.sql`)
+- Vape shop product-line sales UI; cosmetic store hides vape-only fields
 
 **In progress / owner actions:**
-- Confirm Render `pos-web` env vars set (`DATABASE_URL`, `JWT_SECRET`, `GEMINI_API_KEY`) and redeploy after each push if auto-deploy is off
-- Test live site on phone via Render URL
+- After Render redeploy: log in as each store owner → `/insights` → **Add demo sales** (or run `npm run seed:insights-sales` locally with `DATABASE_URL`)
+- Then run **Run analysis** on Insights (requires `GEMINI_API_KEY` + `pos-validation` up)
 
 **Known issues:**
 - Free tier Render services sleep after ~15 min idle (first load slow)
 - Insights requires validation service reachable (`VALIDATION_SERVICE_URL` wired in Render Blueprint)
+- Seeding is per-store via API (multi-tenant); CLI seeds both stores at once
 
-**Next task:** Manual Deploy pos-web on Render after cosmetic UI cleanup push.
+**Next task:** Owner loads demo sales on both tenants, then tests full Insights flow on Render.
 
 ---
 
@@ -195,6 +190,9 @@ Built on Sections 1–2 without modifying their API files.
 - `lib/refinementLoop.js` — fixed **4-iteration** loop (hardcoded, not configurable)
 - `pages/api/analytics/summary.js` — GET sales snapshot
 - `pages/api/recommendations/run.js` — POST runs full loop
+- `lib/seedInsightsSales.js` — ~25-day demo transaction patterns per store (for Insights pilot)
+- `pages/api/admin/seed-insights-sales.js` — POST, owner-only, seeds current `storeId`
+- `scripts/seed-insights-sales.js` — CLI to seed stores 1 and 2 (`npm run seed:insights-sales`)
 
 **Python validation service (`validation-service/`):**
 - Flask app on port 5000 — `POST /validate`

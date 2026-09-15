@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import AuthGuard from '../../components/AuthGuard';
 import Layout from '../../components/Layout';
 import SalesSummary from '../../components/SalesSummary';
-import { authFetch } from '../../lib/api';
+import { authFetch, getUser } from '../../lib/api';
 
 const TYPE_LABELS = {
   restock: 'Restock',
@@ -16,7 +16,12 @@ export default function InsightsPage() {
   const [runResult, setRunResult] = useState(null);
   const [loadingSummary, setLoadingSummary] = useState(false);
   const [running, setRunning] = useState(false);
+  const [seeding, setSeeding] = useState(false);
+  const [seedMessage, setSeedMessage] = useState('');
   const [error, setError] = useState('');
+  const user = getUser();
+  const isOwner = user?.role === 'owner';
+  const hasSparseHistory = summary?.totals?.totalTransactions < 10;
 
   async function loadSummary() {
     setLoadingSummary(true);
@@ -34,6 +39,26 @@ export default function InsightsPage() {
   useEffect(() => {
     loadSummary();
   }, []);
+
+  async function loadDemoSales({ replace = false } = {}) {
+    setSeeding(true);
+    setError('');
+    setSeedMessage('');
+    try {
+      const data = await authFetch('/api/admin/seed-insights-sales', {
+        method: 'POST',
+        body: JSON.stringify({ replace }),
+      });
+      setSeedMessage(
+        `${data.message} (${data.transactionsCreated} transaction${data.transactionsCreated === 1 ? '' : 's'})`
+      );
+      await loadSummary();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSeeding(false);
+    }
+  }
 
   async function runAnalysis() {
     setRunning(true);
@@ -84,6 +109,35 @@ export default function InsightsPage() {
         </p>
 
         {error && <div className="error-banner">{error}</div>}
+        {seedMessage && <div className="success-banner">{seedMessage}</div>}
+
+        {isOwner && hasSparseHistory && (
+          <div className="panel section-block insights-seed-panel">
+            <h3 className="section-title">Need demo sales history?</h3>
+            <p className="text-muted">
+              AI Insights needs about 25 days of transaction patterns. Load demo sales for this
+              store to try the analysis flow without recording every sale manually.
+            </p>
+            <div className="page-header-actions">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => loadDemoSales({ replace: false })}
+                disabled={seeding || running}
+              >
+                {seeding ? 'Loading demo sales…' : 'Add demo sales'}
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => loadDemoSales({ replace: true })}
+                disabled={seeding || running}
+              >
+                Replace with demo sales
+              </button>
+            </div>
+          </div>
+        )}
 
         {loadingSummary && !summary && <p>Loading sales summary...</p>}
         <SalesSummary summary={summary} />
