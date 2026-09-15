@@ -10,28 +10,29 @@ This file is the **single source of truth** for the project's state, architectur
 
 | Field | Value |
 |---|---|
-| **Branch** | `main` |
+| **Branch** | `main` (synced through `54dea36`) |
 | **Repo** | `marcjustinleeggranada/pos-system` |
 | **Deployment** | Render: `pos-web` + `pos-validation` (free tier). Vercel abandoned. |
 | **Database** | Supabase `rfkoerdkpgyzoyzrmbxa` (ap-southeast-1) |
-| **Render redeploy** | Needed — fix VALIDATION_SERVICE_URL (must be full onrender.com URL) |
+| **Render redeploy** | Not needed unless pos-web is behind `54dea36` |
 
 **Recently completed:**
-- Fixed Insights analysis: Gemini 3.6 thinking-part parsing, JSON schema, clearer API errors
-- Validation URL normalization (`https://` prefix) + 120s timeout for Render cold starts
-- Owner diagnostics: `GET /api/admin/insights-diagnostics`
-- `render.yaml`: `VALIDATION_SERVICE_URL` uses `RENDER_EXTERNAL_URL` from pos-validation (not internal `host`)
+- Product costs + demo sales reset (`fa60408`); vape ₱195, bundle ₱133.33/item
+- Insights analysis fixes: Gemini 3.6 parsing, retry/fallback, validation URL (`RENDER_EXTERNAL_URL`)
+- Fixed `iteration is not defined` in Gemini parser (`b203a5c`)
+- Insights UI: results above summary, auto-scroll, running-state message (`54dea36`)
+- Live analysis verified on Render (~35s, 4 validated recommendations)
 
 **In progress / owner actions:**
-- Redeploy **pos-web** and **pos-validation** on Render after push
-- Confirm `GEMINI_API_KEY` is set on pos-web
-- Test `/api/admin/insights-diagnostics` then **Run analysis** on Insights
+- Confirm pos-web is on latest deploy (`54dea36` or newer)
+- `VALIDATION_SERVICE_URL` = `https://pos-validation.onrender.com` on pos-web
+- Wake pos-validation via `/health` before first analysis if cold
 
 **Known issues:**
-- Free tier Render services sleep after ~15 min idle — wake pos-validation before first analysis run
-- If analysis still fails, the API now returns the real error message (not generic 500)
+- Gemini free tier can return high-demand errors — wait and retry
+- Analysis takes 30–60s on Render free tier; keep page open
 
-**Next task:** Owner redeploys Render services and retries Run analysis.
+**Next task:** Pilot testing / evaluation write-up (Major Activities #9–#10) or thesis documentation.
 
 ---
 
