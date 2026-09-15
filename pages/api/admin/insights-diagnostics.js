@@ -1,16 +1,7 @@
 import requireAuth from '../../../middleware/requireAuth';
 
 const { GEMINI_MODEL } = require('../../../lib/gemini');
-
-function getValidationServiceUrl() {
-  let baseUrl = (process.env.VALIDATION_SERVICE_URL || '').trim();
-  if (!baseUrl) return null;
-  baseUrl = baseUrl.replace(/\/$/, '');
-  if (!/^https?:\/\//i.test(baseUrl)) {
-    baseUrl = `https://${baseUrl}`;
-  }
-  return baseUrl;
-}
+const { getValidationServiceUrl } = require('../../../lib/validationServiceUrl');
 
 async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -22,27 +13,25 @@ async function handler(req, res) {
     return res.status(403).json({ error: 'Owner access required' });
   }
 
-  const validationUrl = getValidationServiceUrl();
   let validation = {
-    configured: Boolean(validationUrl),
+    configured: Boolean(process.env.VALIDATION_SERVICE_URL),
+    url: process.env.VALIDATION_SERVICE_URL || null,
     reachable: false,
     status: null,
     error: null,
   };
 
-  if (validationUrl) {
-    try {
-      const response = await fetch(`${validationUrl}/health`, { signal: AbortSignal.timeout(30000) });
-      validation.status = response.status;
-      validation.reachable = response.ok;
-      if (!response.ok) {
-        validation.error = `Health check returned ${response.status}`;
-      }
-    } catch (err) {
-      validation.error = err.message;
+  try {
+    const validationUrl = getValidationServiceUrl();
+    validation.url = validationUrl;
+    const response = await fetch(`${validationUrl}/health`, { signal: AbortSignal.timeout(30000) });
+    validation.status = response.status;
+    validation.reachable = response.ok;
+    if (!response.ok) {
+      validation.error = `Health check returned ${response.status}`;
     }
-  } else {
-    validation.error = 'VALIDATION_SERVICE_URL is not configured';
+  } catch (err) {
+    validation.error = err.message;
   }
 
   return res.status(200).json({

@@ -82,7 +82,14 @@ Follow Section 12 in `PROJECT_CONTEXT.md` for commit identity and hygiene rules.
 | `JWT_SECRET` | Long random string |
 | `GEMINI_API_KEY` | From Google AI Studio |
 
-`VALIDATION_SERVICE_URL` is set automatically — do not override unless debugging.
+`VALIDATION_SERVICE_URL` is set automatically from **pos-validation**'s public URL (`RENDER_EXTERNAL_URL`). It must look like `https://pos-validation-xxxx.onrender.com` — **not** just `pos-validation`.
+
+If Insights shows `Validation service unreachable at https://pos-validation`:
+
+1. Render dashboard → **pos-validation** → copy the public URL at the top (e.g. `https://pos-validation-frt6.onrender.com`).
+2. Render dashboard → **pos-web** → **Environment** → set `VALIDATION_SERVICE_URL` to that full URL → Save.
+3. **Manual Deploy** pos-web.
+4. Open `https://<pos-validation-url>/health` in a browser once to wake the service (free tier cold start).
 
 5. Click **Apply** and wait for both services to finish building (first build ~5–10 min).
 6. Open the **pos-web** URL from the Render dashboard → log in → test `/insights`.

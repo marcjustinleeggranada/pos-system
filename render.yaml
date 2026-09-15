@@ -31,4 +31,4 @@ services:
         fromService:
           type: web
           name: pos-validation
-          property: host
+          envVarKey: RENDER_EXTERNAL_URL
