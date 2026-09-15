@@ -14,13 +14,13 @@ This file is the **single source of truth** for the project's state, architectur
 | **Repo** | `marcjustinleeggranada/pos-system` |
 | **Deployment** | Render: `pos-web` + `pos-validation` (free tier). Vercel abandoned. |
 | **Database** | Supabase `rfkoerdkpgyzoyzrmbxa` (ap-southeast-1) |
-| **Render redeploy** | Needed after this push (Insights analysis fix) |
+| **Render redeploy** | Needed — fix VALIDATION_SERVICE_URL (must be full onrender.com URL) |
 
 **Recently completed:**
 - Fixed Insights analysis: Gemini 3.6 thinking-part parsing, JSON schema, clearer API errors
 - Validation URL normalization (`https://` prefix) + 120s timeout for Render cold starts
 - Owner diagnostics: `GET /api/admin/insights-diagnostics`
-- `render.yaml`: `VALIDATION_SERVICE_URL` wired via service `host` property
+- `render.yaml`: `VALIDATION_SERVICE_URL` uses `RENDER_EXTERNAL_URL` from pos-validation (not internal `host`)
 
 **In progress / owner actions:**
 - Redeploy **pos-web** and **pos-validation** on Render after push
