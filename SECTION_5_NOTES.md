@@ -101,13 +101,18 @@ This almost always means **pos-web cannot reach Supabase**. The login page loads
 3. Test `GET /api/health` on your pos-web URL. If you see `"db":"connection failed"`, the `DATABASE_URL` is still wrong.
 4. **Free tier cold start:** services sleep after ~15 min idle. First phone visit can take **30–60 seconds** — wait and refresh once before assuming it's broken.
 
-### 3. Re-seed test sales (optional)
+### 3. Product costs + demo sales reset
 
-Three options:
+**Cost rules (applied by `sql/009` / reset script):**
+- Vape (store 1): every SKU cost = **₱195**
+- Cosmetic bundles: **₱133.33 × item count** (2–3 items per bundle); capped at **72% of retail** when raw cost exceeds price
+- Individual cosmetics: ~**45% of retail**
 
-1. **Insights page (owner only):** open `/insights` with fewer than 10 transactions in the last 30 days → **Add demo sales** (appends) or **Replace with demo sales**.
-2. **CLI (both stores):** `npm run seed:insights-sales` (reads `DATABASE_URL` from `.env.local`). Pass `--replace` to clear each store's sales first.
-3. **SQL:** run `sql/008_seed_test_sales.sql` against Supabase (clears all transactions for both stores, then seeds).
+**Reset options:**
+
+1. **Insights page (owner):** `/insights` → **Reset costs & demo sales** (updates both stores, clears all sales, reloads demo history).
+2. **CLI:** `npm run reset:insights-data` (needs `DATABASE_URL` in `.env.local`).
+3. **SQL:** run `sql/009_product_costs_and_reseed.sql`, then `sql/008_seed_test_sales.sql` on Supabase.
 
 ---
 

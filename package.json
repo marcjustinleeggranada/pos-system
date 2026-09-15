@@ -6,7 +6,8 @@
     "dev": "next dev -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
-    "seed:insights-sales": "node scripts/seed-insights-sales.js"
+    "seed:insights-sales": "node scripts/seed-insights-sales.js",
+    "reset:insights-data": "node scripts/reset-insights-data.js"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",

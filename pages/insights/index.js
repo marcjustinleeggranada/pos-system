@@ -17,11 +17,13 @@ export default function InsightsPage() {
   const [loadingSummary, setLoadingSummary] = useState(false);
   const [running, setRunning] = useState(false);
   const [seeding, setSeeding] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const [seedMessage, setSeedMessage] = useState('');
   const [error, setError] = useState('');
   const user = getUser();
   const isOwner = user?.role === 'owner';
   const hasSparseHistory = summary?.totals?.totalTransactions < 10;
+  const missingCosts = (summary?.totals?.productsMissingCost || 0) > 0;
 
   async function loadSummary() {
     setLoadingSummary(true);
@@ -39,6 +41,24 @@ export default function InsightsPage() {
   useEffect(() => {
     loadSummary();
   }, []);
+
+  async function resetCostsAndDemoSales() {
+    setResetting(true);
+    setError('');
+    setSeedMessage('');
+    setRunResult(null);
+    try {
+      const data = await authFetch('/api/admin/reset-insights-data', { method: 'POST' });
+      setSeedMessage(
+        `${data.message} (${data.productsUpdated} product costs, ${data.transactionsCreated} transactions)`
+      );
+      await loadSummary();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setResetting(false);
+    }
+  }
 
   async function loadDemoSales({ replace = false } = {}) {
     setSeeding(true);
@@ -111,30 +131,43 @@ export default function InsightsPage() {
         {error && <div className="error-banner">{error}</div>}
         {seedMessage && <div className="success-banner">{seedMessage}</div>}
 
-        {isOwner && hasSparseHistory && (
+        {isOwner && (hasSparseHistory || missingCosts) && (
           <div className="panel section-block insights-seed-panel">
-            <h3 className="section-title">Need demo sales history?</h3>
+            <h3 className="section-title">Demo data tools</h3>
             <p className="text-muted">
-              AI Insights needs about 25 days of transaction patterns. Load demo sales for this
-              store to try the analysis flow without recording every sale manually.
+              Apply catalog costs (vape ₱195; cosmetic bundles at ₱133.33 per item), clear all sales
+              history, and reload ~25 days of demo transactions for both stores. Use this when gross
+              margin shows 100% because costs were missing.
             </p>
             <div className="page-header-actions">
               <button
                 type="button"
                 className="btn btn-secondary"
-                onClick={() => loadDemoSales({ replace: false })}
-                disabled={seeding || running}
+                onClick={resetCostsAndDemoSales}
+                disabled={resetting || seeding || running}
               >
-                {seeding ? 'Loading demo sales…' : 'Add demo sales'}
+                {resetting ? 'Resetting…' : 'Reset costs & demo sales'}
               </button>
-              <button
-                type="button"
-                className="btn btn-ghost"
-                onClick={() => loadDemoSales({ replace: true })}
-                disabled={seeding || running}
-              >
-                Replace with demo sales
-              </button>
+              {hasSparseHistory && (
+                <>
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    onClick={() => loadDemoSales({ replace: false })}
+                    disabled={resetting || seeding || running}
+                  >
+                    {seeding ? 'Loading…' : 'Add demo sales (this store)'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    onClick={() => loadDemoSales({ replace: true })}
+                    disabled={resetting || seeding || running}
+                  >
+                    Replace demo sales (this store)
+                  </button>
+                </>
+              )}
             </div>
           </div>
         )}

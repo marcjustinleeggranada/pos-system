@@ -14,24 +14,23 @@ This file is the **single source of truth** for the project's state, architectur
 | **Repo** | `marcjustinleeggranada/pos-system` |
 | **Deployment** | Render: `pos-web` + `pos-validation` (free tier). Vercel abandoned. |
 | **Database** | Supabase `rfkoerdkpgyzoyzrmbxa` (ap-southeast-1) |
-| **Render redeploy** | Needed after this push (demo sales seed + Insights UI) |
+| **Render redeploy** | Needed after this push (costs + sales reset) |
 
 **Recently completed:**
-- Demo sales seeder for AI Insights: `lib/seedInsightsSales.js`, owner API `POST /api/admin/seed-insights-sales`, CLI `npm run seed:insights-sales`
-- Insights page: owners with fewer than 10 transactions see **Add demo sales** / **Replace with demo sales**
-- Vape + cosmetic patterns: rising/declining SKUs and co-purchase pairs (matches `sql/008_seed_test_sales.sql`)
-- Vape shop product-line sales UI; cosmetic store hides vape-only fields
+- Product cost rules: vape ₱195; cosmetic bundles ₱133.33/item (capped at 72% of price); individual cosmetics ~45% of retail
+- Full reset flow: apply costs → clear all sales → reseed demo history (`lib/resetInsightsData.js`, `POST /api/admin/reset-insights-data`, `npm run reset:insights-data`)
+- Insights owner panel: **Reset costs & demo sales** (both stores in one click)
+- SQL: `sql/009_product_costs_and_reseed.sql` + `sql/008_seed_test_sales.sql`
 
 **In progress / owner actions:**
-- After Render redeploy: log in as each store owner → `/insights` → **Add demo sales** (or run `npm run seed:insights-sales` locally with `DATABASE_URL`)
-- Then run **Run analysis** on Insights (requires `GEMINI_API_KEY` + `pos-validation` up)
+- After Render redeploy: `/insights` → **Reset costs & demo sales** (as either owner)
+- Confirm gross margin is no longer 100%; then **Run analysis**
 
 **Known issues:**
 - Free tier Render services sleep after ~15 min idle (first load slow)
 - Insights requires validation service reachable (`VALIDATION_SERVICE_URL` wired in Render Blueprint)
-- Seeding is per-store via API (multi-tenant); CLI seeds both stores at once
 
-**Next task:** Owner loads demo sales on both tenants, then tests full Insights flow on Render.
+**Next task:** Owner runs reset on Render, verifies COGS/margin on Insights, then tests AI analysis.
 
 ---
 
@@ -191,8 +190,11 @@ Built on Sections 1–2 without modifying their API files.
 - `pages/api/analytics/summary.js` — GET sales snapshot
 - `pages/api/recommendations/run.js` — POST runs full loop
 - `lib/seedInsightsSales.js` — ~25-day demo transaction patterns per store (for Insights pilot)
+- `lib/productCosts.js` / `lib/applyProductCosts.js` — vape ₱195; bundle/cosmetic cost rules
+- `lib/resetInsightsData.js` — apply costs, clear sales, reseed both stores
 - `pages/api/admin/seed-insights-sales.js` — POST, owner-only, seeds current `storeId`
-- `scripts/seed-insights-sales.js` — CLI to seed stores 1 and 2 (`npm run seed:insights-sales`)
+- `pages/api/admin/reset-insights-data.js` — POST, owner-only, full reset for both stores
+- `scripts/seed-insights-sales.js` / `scripts/reset-insights-data.js` — CLI helpers
 
 **Python validation service (`validation-service/`):**
 - Flask app on port 5000 — `POST /validate`
