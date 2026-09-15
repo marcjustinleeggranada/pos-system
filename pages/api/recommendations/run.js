@@ -2,6 +2,37 @@ import requireAuth from '../../../middleware/requireAuth';
 
 const { runRefinementLoop } = require('../../../lib/refinementLoop');
 
+function mapRecommendationError(err) {
+  const message = err.message || 'Internal server error';
+
+  if (message.includes('GEMINI_API_KEY')) {
+    return { status: 503, error: message };
+  }
+
+  if (
+    message.includes('Validation service') ||
+    message.includes('fetch failed') ||
+    message.includes('unreachable') ||
+    message.includes('timed out')
+  ) {
+    return {
+      status: 503,
+      error: message,
+    };
+  }
+
+  if (
+    message.toLowerCase().includes('gemini') ||
+    message.includes('API key not valid') ||
+    message.includes('INVALID_ARGUMENT') ||
+    message.includes('invalid JSON')
+  ) {
+    return { status: 502, error: message };
+  }
+
+  return { status: 500, error: message };
+}
+
 async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
@@ -13,21 +44,8 @@ async function handler(req, res) {
     return res.status(200).json(result);
   } catch (err) {
     console.error('Recommendation loop error:', err);
-
-    if (err.message.includes('GEMINI_API_KEY')) {
-      return res.status(503).json({ error: err.message });
-    }
-    if (err.message.includes('Validation service') || err.message.includes('fetch failed')) {
-      return res.status(503).json({
-        error:
-          'Statistical validation service is unavailable. Start it with: cd validation-service && python app.py',
-      });
-    }
-    if (err.message.toLowerCase().includes('gemini')) {
-      return res.status(502).json({ error: err.message });
-    }
-
-    return res.status(500).json({ error: 'Internal server error' });
+    const mapped = mapRecommendationError(err);
+    return res.status(mapped.status).json({ error: mapped.error });
   }
 }
 

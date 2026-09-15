@@ -14,23 +14,24 @@ This file is the **single source of truth** for the project's state, architectur
 | **Repo** | `marcjustinleeggranada/pos-system` |
 | **Deployment** | Render: `pos-web` + `pos-validation` (free tier). Vercel abandoned. |
 | **Database** | Supabase `rfkoerdkpgyzoyzrmbxa` (ap-southeast-1) |
-| **Render redeploy** | Needed after this push (costs + sales reset) |
+| **Render redeploy** | Needed after this push (Insights analysis fix) |
 
 **Recently completed:**
-- Product cost rules: vape ₱195; cosmetic bundles ₱133.33/item (capped at 72% of price); individual cosmetics ~45% of retail
-- Full reset flow: apply costs → clear all sales → reseed demo history (`lib/resetInsightsData.js`, `POST /api/admin/reset-insights-data`, `npm run reset:insights-data`)
-- Insights owner panel: **Reset costs & demo sales** (both stores in one click)
-- SQL: `sql/009_product_costs_and_reseed.sql` + `sql/008_seed_test_sales.sql`
+- Fixed Insights analysis: Gemini 3.6 thinking-part parsing, JSON schema, clearer API errors
+- Validation URL normalization (`https://` prefix) + 120s timeout for Render cold starts
+- Owner diagnostics: `GET /api/admin/insights-diagnostics`
+- `render.yaml`: `VALIDATION_SERVICE_URL` wired via service `host` property
 
 **In progress / owner actions:**
-- After Render redeploy: `/insights` → **Reset costs & demo sales** (as either owner)
-- Confirm gross margin is no longer 100%; then **Run analysis**
+- Redeploy **pos-web** and **pos-validation** on Render after push
+- Confirm `GEMINI_API_KEY` is set on pos-web
+- Test `/api/admin/insights-diagnostics` then **Run analysis** on Insights
 
 **Known issues:**
-- Free tier Render services sleep after ~15 min idle (first load slow)
-- Insights requires validation service reachable (`VALIDATION_SERVICE_URL` wired in Render Blueprint)
+- Free tier Render services sleep after ~15 min idle — wake pos-validation before first analysis run
+- If analysis still fails, the API now returns the real error message (not generic 500)
 
-**Next task:** Owner runs reset on Render, verifies COGS/margin on Insights, then tests AI analysis.
+**Next task:** Owner redeploys Render services and retries Run analysis.
 
 ---
 
@@ -185,7 +186,7 @@ Built on Sections 1–2 without modifying their API files.
 
 **Analytics & orchestration (Next.js):**
 - `lib/analytics.js` — product stats, 30-day trend, co-purchase pairs, daily sales per product
-- `lib/gemini.js` — Gemini API integration (`gemini-1.5-flash`)
+- `lib/gemini.js` — Gemini API integration (`gemini-3.6-flash`)
 - `lib/refinementLoop.js` — fixed **4-iteration** loop (hardcoded, not configurable)
 - `pages/api/analytics/summary.js` — GET sales snapshot
 - `pages/api/recommendations/run.js` — POST runs full loop

@@ -64,7 +64,7 @@ Sections 1–3 API files were **not modified**.
 
 ## Assumptions
 
-- **Gemini model:** `gemini-1.5-flash` via REST API (`GEMINI_API_KEY` in `.env.local`)
+- **Gemini model:** `gemini-3.6-flash` via REST API (`GEMINI_API_KEY` in `.env.local`); uses `thinkingLevel: minimal` and JSON schema for structured output
 - **Python service runs locally** on port 5000 during development
 - **Minimum data:** trend tests need ≥ 4 daily data points; sparse stores may get zero validated recommendations (expected with little sales history)
 - **Recommendation JSON:** Gemini asked to return structured JSON; `responseMimeType: application/json` used when supported
