@@ -510,6 +510,18 @@ select {
   margin-bottom: var(--space-4);
 }
 
+.analysis-results {
+  scroll-margin-top: var(--space-4);
+}
+
+.analysis-complete-banner {
+  font-weight: 600;
+}
+
+.analysis-running-panel {
+  margin-bottom: var(--space-4);
+}
+
 /* ——— Tables ——— */
 
 .table-wrap {

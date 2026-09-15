@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import AuthGuard from '../../components/AuthGuard';
 import Layout from '../../components/Layout';
 import SalesSummary from '../../components/SalesSummary';
@@ -20,6 +20,7 @@ export default function InsightsPage() {
   const [resetting, setResetting] = useState(false);
   const [seedMessage, setSeedMessage] = useState('');
   const [error, setError] = useState('');
+  const resultsRef = useRef(null);
   const user = getUser();
   const isOwner = user?.role === 'owner';
   const hasSparseHistory = summary?.totals?.totalTransactions < 10;
@@ -41,6 +42,12 @@ export default function InsightsPage() {
   useEffect(() => {
     loadSummary();
   }, []);
+
+  useEffect(() => {
+    if (runResult && resultsRef.current) {
+      resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [runResult]);
 
   async function resetCostsAndDemoSales() {
     setResetting(true);
@@ -84,18 +91,90 @@ export default function InsightsPage() {
     setRunning(true);
     setError('');
     setRunResult(null);
+    setSeedMessage('');
     try {
       const data = await authFetch('/api/recommendations/run', { method: 'POST' });
+      if (!data || !Array.isArray(data.validatedRecommendations) || !Array.isArray(data.iterations)) {
+        throw new Error('Analysis finished but returned an unexpected response. Try again.');
+      }
       setRunResult(data);
       if (!summary) {
         const summaryData = await authFetch('/api/analytics/summary');
         setSummary(summaryData.summary);
       }
     } catch (err) {
-      setError(err.message);
+      const message =
+        err?.message ||
+        'Analysis failed. On Render free tier this can take up to 60 seconds — keep this page open and try again.';
+      setError(message);
+      setRunResult(null);
     } finally {
       setRunning(false);
     }
+  }
+
+  function renderAnalysisResults() {
+    if (!runResult) return null;
+
+    const validatedCount = runResult.validatedRecommendations?.length ?? 0;
+    const iterationCount = runResult.iterationCount ?? runResult.iterations?.length ?? 0;
+    const maxIterations = runResult.maxIterations ?? 4;
+
+    return (
+      <div ref={resultsRef} id="analysis-results" className="analysis-results">
+        <div className="success-banner analysis-complete-banner">
+          Analysis complete — {validatedCount} validated recommendation
+          {validatedCount === 1 ? '' : 's'} after {iterationCount} of {maxIterations} iteration
+          {iterationCount === 1 ? '' : 's'}.
+        </div>
+
+        <div className="panel section-block">
+          <h3 className="section-title">Validated recommendations ({validatedCount})</h3>
+          {validatedCount === 0 ? (
+            <p className="text-muted">
+              Nothing passed validation yet. Record more sales, then run analysis again.
+            </p>
+          ) : (
+            runResult.validatedRecommendations.map((rec) => (
+              <div key={rec.id} className="insight-card">
+                <div className="insight-type">{TYPE_LABELS[rec.type] || rec.type}</div>
+                <h4 className="insight-title">{rec.title}</h4>
+                <p className="insight-rationale">{rec.rationale}</p>
+                <div className="insight-stats">
+                  {rec.validation?.test}
+                  {rec.validation?.pValue != null && ` · p=${rec.validation.pValue}`}
+                  {rec.validation?.iterationValidated != null &&
+                    ` · iteration ${rec.validation.iterationValidated}`}
+                </div>
+                <div className="insight-stats">{rec.validation?.message}</div>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="panel loop-log">
+          <h3 className="section-title">Validation log</h3>
+          <p className="text-muted">
+            {iterationCount} of {maxIterations} iterations completed
+          </p>
+          {(runResult.iterations || []).map((iter) => (
+            <details key={iter.iteration}>
+              <summary>
+                Iteration {iter.iteration}: {iter.allPassed ? 'all passed' : 'revisions needed'}
+              </summary>
+              <ul>
+                {(iter.validationResults || []).map((vr) => (
+                  <li key={vr.id}>
+                    {vr.id}: {vr.passed ? 'pass' : 'fail'} ({vr.test}
+                    {vr.pValue != null ? `, p=${vr.pValue}` : ''})
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -127,6 +206,15 @@ export default function InsightsPage() {
           Review sales patterns and run validated stock recommendations. Each suggestion is checked
           against your transaction history before it appears here.
         </p>
+
+        {running && (
+          <div className="panel section-block analysis-running-panel">
+            <p className="text-muted">
+              Running Gemini + statistical validation (up to 4 iterations). This usually takes 30–60
+              seconds on Render free tier — keep this page open.
+            </p>
+          </div>
+        )}
 
         {error && <div className="error-banner">{error}</div>}
         {seedMessage && <div className="success-banner">{seedMessage}</div>}
@@ -172,59 +260,10 @@ export default function InsightsPage() {
           </div>
         )}
 
+        {renderAnalysisResults()}
+
         {loadingSummary && !summary && <p>Loading sales summary...</p>}
         <SalesSummary summary={summary} />
-
-        {runResult && (
-          <>
-            <div className="panel section-block">
-              <h3 className="section-title">
-                Validated recommendations ({runResult.validatedRecommendations.length})
-              </h3>
-              {runResult.validatedRecommendations.length === 0 ? (
-                <p className="text-muted">
-                  Nothing passed validation yet. Record more sales, then run analysis again.
-                </p>
-              ) : (
-                runResult.validatedRecommendations.map((rec) => (
-                  <div key={rec.id} className="insight-card">
-                    <div className="insight-type">{TYPE_LABELS[rec.type] || rec.type}</div>
-                    <h4 className="insight-title">{rec.title}</h4>
-                    <p className="insight-rationale">{rec.rationale}</p>
-                    <div className="insight-stats">
-                      {rec.validation.test}
-                      {rec.validation.pValue != null && ` · p=${rec.validation.pValue}`}
-                      {` · iteration ${rec.validation.iterationValidated}`}
-                    </div>
-                    <div className="insight-stats">{rec.validation.message}</div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            <div className="panel loop-log">
-              <h3 className="section-title">Validation log</h3>
-              <p className="text-muted">
-                {runResult.iterationCount} of {runResult.maxIterations} iterations completed
-              </p>
-              {runResult.iterations.map((iter) => (
-                <details key={iter.iteration}>
-                  <summary>
-                    Iteration {iter.iteration}: {iter.allPassed ? 'all passed' : 'revisions needed'}
-                  </summary>
-                  <ul>
-                    {iter.validationResults.map((vr) => (
-                      <li key={vr.id}>
-                        {vr.id}: {vr.passed ? 'pass' : 'fail'} ({vr.test}
-                        {vr.pValue != null ? `, p=${vr.pValue}` : ''})
-                      </li>
-                    ))}
-                  </ul>
-                </details>
-              ))}
-            </div>
-          </>
-        )}
       </Layout>
     </AuthGuard>
   );

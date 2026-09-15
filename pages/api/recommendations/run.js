@@ -22,6 +22,17 @@ function mapRecommendationError(err) {
   }
 
   if (
+    message.toLowerCase().includes('high demand') ||
+    message.toLowerCase().includes('try again later') ||
+    message.toLowerCase().includes('resource exhausted')
+  ) {
+    return {
+      status: 503,
+      error: `${message} Wait a minute and try Run analysis again.`,
+    };
+  }
+
+  if (
     message.toLowerCase().includes('gemini') ||
     message.includes('API key not valid') ||
     message.includes('INVALID_ARGUMENT') ||
@@ -41,7 +52,17 @@ async function handler(req, res) {
 
   try {
     const result = await runRefinementLoop(req.storeId);
-    return res.status(200).json(result);
+    return res.status(200).json({
+      iterationCount: result.iterationCount,
+      maxIterations: result.maxIterations,
+      validatedRecommendations: result.validatedRecommendations,
+      analyticsSummary: result.analyticsSummary,
+      iterations: result.iterations.map((iter) => ({
+        iteration: iter.iteration,
+        allPassed: iter.allPassed,
+        validationResults: iter.validationResults,
+      })),
+    });
   } catch (err) {
     console.error('Recommendation loop error:', err);
     const mapped = mapRecommendationError(err);
