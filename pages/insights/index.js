@@ -94,7 +94,7 @@ export default function InsightsPage() {
     setSeedMessage('');
     try {
       const data = await authFetch('/api/recommendations/run', { method: 'POST' });
-      if (!data || !Array.isArray(data.validatedRecommendations) || !Array.isArray(data.iterations)) {
+      if (!data || !Array.isArray(data.validatedRecommendations)) {
         throw new Error('Analysis finished but returned an unexpected response. Try again.');
       }
       setRunResult(data);

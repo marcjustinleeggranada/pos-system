@@ -53,8 +53,12 @@ async function handler(req, res) {
   try {
     const result = await runRefinementLoop(req.storeId);
     return res.status(200).json({
-      validatedRecommendations: result.validatedRecommendations,
+      validatedRecommendations: result.validatedRecommendations ?? [],
       analyticsSummary: result.analyticsSummary,
+      // Kept for older cached Insights bundles; not shown in the UI.
+      iterationCount: result.iterationCount,
+      maxIterations: result.maxIterations,
+      iterations: [],
     });
   } catch (err) {
     console.error('Recommendation loop error:', err);
