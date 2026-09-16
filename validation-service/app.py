@@ -29,8 +29,12 @@ def validate():
         payload.get("storeId"),
     )
 
-    result = validate_recommendations(payload)
-    return jsonify(result)
+    try:
+        result = validate_recommendations(payload)
+        return jsonify(result)
+    except Exception as exc:
+        logger.exception("Validation failed for store_id=%s", payload.get("storeId"))
+        return jsonify({"error": f"Validation processing error: {exc}"}), 500
 
 
 if __name__ == "__main__":

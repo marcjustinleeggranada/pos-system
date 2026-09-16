@@ -91,6 +91,8 @@ If Insights shows `Validation service unreachable at https://pos-validation`:
 3. **Manual Deploy** pos-web.
 4. Open `https://<pos-validation-url>/health` in a browser once to wake the service (free tier cold start).
 
+**"Validation service error (502)" on Insights:** pos-validation is asleep or still starting. Open `https://pos-validation.onrender.com/health`, wait for `{"status":"ok"}`, then run analysis again. pos-web now retries 502/503 automatically and pings `/health` first.
+
 5. Click **Apply** and wait for both services to finish building (first build ~5–10 min).
 6. Open the **pos-web** URL from the Render dashboard → log in → test `/insights`.
 7. Verify web DB: `GET https://<pos-web-url>/api/health` → `{"status":"ok","db":"connected"}`.
