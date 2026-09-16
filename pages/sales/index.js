@@ -19,6 +19,16 @@ export default function SalesPage() {
   const [receipt, setReceipt] = useState(null);
   const [flavorPicker, setFlavorPicker] = useState(null);
   const [selectedFlavorId, setSelectedFlavorId] = useState('');
+  const [cartOpen, setCartOpen] = useState(false);
+  const [mobileCartUi, setMobileCartUi] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 900px)');
+    const syncViewport = () => setMobileCartUi(mediaQuery.matches);
+    syncViewport();
+    mediaQuery.addEventListener('change', syncViewport);
+    return () => mediaQuery.removeEventListener('change', syncViewport);
+  }, []);
 
   const loadProducts = useCallback(async () => {
     setLoading(true);
@@ -124,6 +134,23 @@ export default function SalesPage() {
   }
 
   const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  useEffect(() => {
+    if (cart.length === 0) {
+      setCartOpen(false);
+    }
+  }, [cart.length]);
+
+  useEffect(() => {
+    if (!cartOpen) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [cartOpen]);
 
   async function handleCheckout() {
     if (cart.length === 0) return;
@@ -150,6 +177,7 @@ export default function SalesPage() {
         items: [...cart],
       });
       setCart([]);
+      setCartOpen(false);
       await loadProducts();
     } catch (err) {
       setError(err.message);
@@ -171,8 +199,8 @@ export default function SalesPage() {
 
         {error && <div className="error-banner">{error}</div>}
 
-        <div className="sales-layout">
-          <div>
+        <div className={`sales-layout${cart.length > 0 ? ' has-cart-dock' : ''}`}>
+          <div className="sales-catalog">
             <input
               className="input search-bar"
               placeholder={
@@ -239,74 +267,124 @@ export default function SalesPage() {
             )}
           </div>
 
-          <aside className="till-drawer" aria-label="Current sale">
-            <h3 className="section-title">Current sale</h3>
-            {cart.length === 0 ? (
-              <p className="till-empty">Select a product to start a sale.</p>
-            ) : (
-              cart.map((item) => (
-                <div key={item.productId} className="cart-item">
-                  <div>
-                    <div className="cart-item-name">{item.name}</div>
-                    <div className="cart-item-unit">{formatCurrency(item.price)} each</div>
-                  </div>
-                  <div className="cart-item-controls">
-                    <button
-                      type="button"
-                      className="btn btn-secondary btn-icon"
-                      onClick={() => updateQuantity(item.productId, -1)}
-                      aria-label={`Decrease ${item.name}`}
-                    >
-                      −
-                    </button>
-                    <span className="amount">{item.quantity}</span>
-                    <button
-                      type="button"
-                      className="btn btn-secondary btn-icon"
-                      onClick={() => updateQuantity(item.productId, 1)}
-                      aria-label={`Increase ${item.name}`}
-                    >
-                      +
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-danger btn-icon"
-                      onClick={() => removeFromCart(item.productId)}
-                      aria-label={`Remove ${item.name}`}
-                    >
-                      ×
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-
-            <div className="cart-total-row">
-              <span className="cart-total-label">Total due</span>
-              <span className="cart-total-value">{formatCurrency(cartTotal)}</span>
-            </div>
-
-            <label className="field">
-              <span className="field-label">Payment method</span>
-              <select
-                className="select"
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value)}
+          {cart.length > 0 && (
+            <div className="cart-dock" aria-live="polite">
+              <button
+                type="button"
+                className="cart-dock-bar"
+                onClick={() => setCartOpen(true)}
+                aria-expanded={cartOpen}
+                aria-controls="sales-cart-panel"
               >
-                <option value="cash">Cash</option>
-                <option value="card">Card</option>
-                <option value="gcash">GCash</option>
-              </select>
-            </label>
+                <span className="cart-dock-summary">
+                  <span className="cart-dock-count" aria-hidden="true">{cartItemCount}</span>
+                  <span className="cart-dock-label">
+                    {cartItemCount === 1 ? '1 item' : `${cartItemCount} items`}
+                  </span>
+                </span>
+                <span className="cart-dock-total">{formatCurrency(cartTotal)}</span>
+                <span className="cart-dock-action">Review</span>
+              </button>
+            </div>
+          )}
 
+          {cartOpen && (
             <button
               type="button"
-              className="btn btn-till btn-block"
-              disabled={cart.length === 0 || checkingOut}
-              onClick={handleCheckout}
-            >
-              {checkingOut ? 'Recording sale…' : 'Complete sale'}
-            </button>
+              className="cart-sheet-backdrop"
+              aria-label="Close cart"
+              onClick={() => setCartOpen(false)}
+            />
+          )}
+
+          <aside
+            id="sales-cart-panel"
+            className={`till-drawer${cartOpen ? ' is-open' : ''}`}
+            aria-label="Current sale"
+            aria-hidden={mobileCartUi && cart.length > 0 && !cartOpen ? true : undefined}
+          >
+            <div className="till-drawer-header">
+              <h3 className="section-title">Current sale</h3>
+              <button
+                type="button"
+                className="till-drawer-close"
+                onClick={() => setCartOpen(false)}
+                aria-label="Close cart"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="till-drawer-body">
+              {cart.length === 0 ? (
+                <p className="till-empty">Select a product to start a sale.</p>
+              ) : (
+                cart.map((item) => (
+                  <div key={item.productId} className="cart-item">
+                    <div>
+                      <div className="cart-item-name">{item.name}</div>
+                      <div className="cart-item-unit">{formatCurrency(item.price)} each</div>
+                    </div>
+                    <div className="cart-item-controls">
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-icon"
+                        onClick={() => updateQuantity(item.productId, -1)}
+                        aria-label={`Decrease ${item.name}`}
+                      >
+                        −
+                      </button>
+                      <span className="amount">{item.quantity}</span>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-icon"
+                        onClick={() => updateQuantity(item.productId, 1)}
+                        aria-label={`Increase ${item.name}`}
+                      >
+                        +
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-danger btn-icon"
+                        onClick={() => removeFromCart(item.productId)}
+                        aria-label={`Remove ${item.name}`}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="till-drawer-footer">
+              <div className="cart-total-row">
+                <span className="cart-total-label">Total due</span>
+                <span className="cart-total-value">{formatCurrency(cartTotal)}</span>
+              </div>
+
+              <label className="field">
+                <span className="field-label">Payment method</span>
+                <select
+                  className="select"
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                >
+                  <option value="cash">Cash</option>
+                  <option value="card">Card</option>
+                  <option value="gcash">GCash</option>
+                </select>
+              </label>
+
+              <button
+                type="button"
+                className="btn btn-till btn-block"
+                disabled={cart.length === 0 || checkingOut}
+                onClick={handleCheckout}
+              >
+                {checkingOut ? 'Recording sale…' : 'Complete sale'}
+              </button>
+            </div>
           </aside>
         </div>
 
