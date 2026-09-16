@@ -117,15 +117,12 @@ export default function InsightsPage() {
     if (!runResult) return null;
 
     const validatedCount = runResult.validatedRecommendations?.length ?? 0;
-    const iterationCount = runResult.iterationCount ?? runResult.iterations?.length ?? 0;
-    const maxIterations = runResult.maxIterations ?? 4;
 
     return (
       <div ref={resultsRef} id="analysis-results" className="analysis-results">
         <div className="success-banner analysis-complete-banner">
           Analysis complete — {validatedCount} validated recommendation
-          {validatedCount === 1 ? '' : 's'} after {iterationCount} of {maxIterations} iteration
-          {iterationCount === 1 ? '' : 's'}.
+          {validatedCount === 1 ? '' : 's'}.
         </div>
 
         <div className="panel section-block">
@@ -143,35 +140,11 @@ export default function InsightsPage() {
                 <div className="insight-stats">
                   {rec.validation?.test}
                   {rec.validation?.pValue != null && ` · p=${rec.validation.pValue}`}
-                  {rec.validation?.iterationValidated != null &&
-                    ` · iteration ${rec.validation.iterationValidated}`}
                 </div>
                 <div className="insight-stats">{rec.validation?.message}</div>
               </div>
             ))
           )}
-        </div>
-
-        <div className="panel loop-log">
-          <h3 className="section-title">Validation log</h3>
-          <p className="text-muted">
-            {iterationCount} of {maxIterations} iterations completed
-          </p>
-          {(runResult.iterations || []).map((iter) => (
-            <details key={iter.iteration}>
-              <summary>
-                Iteration {iter.iteration}: {iter.allPassed ? 'all passed' : 'revisions needed'}
-              </summary>
-              <ul>
-                {(iter.validationResults || []).map((vr) => (
-                  <li key={vr.id}>
-                    {vr.id}: {vr.passed ? 'pass' : 'fail'} ({vr.test}
-                    {vr.pValue != null ? `, p=${vr.pValue}` : ''})
-                  </li>
-                ))}
-              </ul>
-            </details>
-          ))}
         </div>
       </div>
     );

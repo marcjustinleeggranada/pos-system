@@ -53,15 +53,8 @@ async function handler(req, res) {
   try {
     const result = await runRefinementLoop(req.storeId);
     return res.status(200).json({
-      iterationCount: result.iterationCount,
-      maxIterations: result.maxIterations,
       validatedRecommendations: result.validatedRecommendations,
       analyticsSummary: result.analyticsSummary,
-      iterations: result.iterations.map((iter) => ({
-        iteration: iter.iteration,
-        allPassed: iter.allPassed,
-        validationResults: iter.validationResults,
-      })),
     });
   } catch (err) {
     console.error('Recommendation loop error:', err);
