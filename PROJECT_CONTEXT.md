@@ -31,8 +31,11 @@ This file is the **single source of truth** for the project's state, architectur
 **Known issues:**
 - Gemini free tier can return high-demand errors — wait and retry
 - Analysis takes 30–60s on Render free tier; keep page open
+- pos-validation 502 on cold start — wake `https://pos-validation.onrender.com/health` first; client now retries
 
-**Next task:** Pilot testing / evaluation write-up (Major Activities #9–#10) or thesis documentation.
+**Next task:** Redeploy pos-web + pos-validation after validation retry fix; continue pilot testing docs.
+
+**Render redeploy:** Needed after validation 502 retry fix (both services if `app.py` changed).
 
 ---
 
