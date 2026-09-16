@@ -6,25 +6,24 @@ This file is the **single source of truth** for the project's state, architectur
 
 ## Current session state
 
-**Last updated:** 2026-09-15
+**Last updated:** 2026-09-16
 
 | Field | Value |
 |---|---|
-| **Branch** | `main` (synced through `54dea36`) |
+| **Branch** | `cursor/mobile-cart-redesign-b30b` (PR pending merge) |
 | **Repo** | `marcjustinleeggranada/pos-system` |
 | **Deployment** | Render: `pos-web` + `pos-validation` (free tier). Vercel abandoned. |
 | **Database** | Supabase `rfkoerdkpgyzoyzrmbxa` (ap-southeast-1) |
-| **Render redeploy** | Not needed unless pos-web is behind `54dea36` |
+| **Render redeploy** | Needed after merging mobile cart redesign (`b2cf15b`) |
 
 **Recently completed:**
-- Product costs + demo sales reset (`fa60408`); vape ₱195, bundle ₱133.33/item
-- Insights analysis fixes: Gemini 3.6 parsing, retry/fallback, validation URL (`RENDER_EXTERNAL_URL`)
-- Fixed `iteration is not defined` in Gemini parser (`b203a5c`)
-- Insights UI: results above summary, auto-scroll, running-state message (`54dea36`)
-- Live analysis verified on Render (~35s, 4 validated recommendations)
+- Mobile sales cart redesign (`b2cf15b`): compact cart dock + slide-up sheet on mobile; cleaner sticky till panel on desktop
+- Insights response handling fix (`faa273c`); validation log removed from UI (`2683fc7`)
+- Validation 502 retry + wake (`52689f2`); Gemini iteration fix (`b203a5c`)
+- Product costs + demo sales reset (`fa60408`); Insights UX scroll/banner (`54dea36`)
 
 **In progress / owner actions:**
-- Confirm pos-web is on latest deploy (`54dea36` or newer)
+- Merge PR for mobile cart redesign and redeploy pos-web
 - `VALIDATION_SERVICE_URL` = `https://pos-validation.onrender.com` on pos-web
 - Wake pos-validation via `/health` before first analysis if cold
 
@@ -33,9 +32,9 @@ This file is the **single source of truth** for the project's state, architectur
 - Analysis takes 30–60s on Render free tier; keep page open
 - pos-validation 502 on cold start — wake `https://pos-validation.onrender.com/health` first; client now retries
 
-**Next task:** Redeploy pos-web + pos-validation after validation retry fix; continue pilot testing docs.
+**Next task:** Merge cart redesign PR; pilot-test sales flow on mobile after Render redeploy.
 
-**Render redeploy:** Needed after validation 502 retry fix (both services if `app.py` changed).
+**Render redeploy:** Needed for pos-web after cart redesign merge.
 
 ---
 
