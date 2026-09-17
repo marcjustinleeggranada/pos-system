@@ -10,20 +10,20 @@ This file is the **single source of truth** for the project's state, architectur
 
 | Field | Value |
 |---|---|
-| **Branch** | `cursor/mobile-cart-redesign-b30b` (PR pending merge) |
+| **Branch** | `main` (synced through `b1952db`) |
 | **Repo** | `marcjustinleeggranada/pos-system` |
 | **Deployment** | Render: `pos-web` + `pos-validation` (free tier). Vercel abandoned. |
 | **Database** | Supabase `rfkoerdkpgyzoyzrmbxa` (ap-southeast-1) |
-| **Render redeploy** | Needed after merging mobile cart redesign (`b2cf15b`) |
+| **Render redeploy** | Needed after mobile cart redesign (`9f32afc`) |
 
 **Recently completed:**
-- Mobile sales cart redesign (`b2cf15b`): compact cart dock + slide-up sheet on mobile; cleaner sticky till panel on desktop
+- Mobile sales cart redesign (`9f32afc`): compact cart dock + slide-up sheet on mobile; cleaner sticky till panel on desktop
 - Insights response handling fix (`faa273c`); validation log removed from UI (`2683fc7`)
 - Validation 502 retry + wake (`52689f2`); Gemini iteration fix (`b203a5c`)
 - Product costs + demo sales reset (`fa60408`); Insights UX scroll/banner (`54dea36`)
 
 **In progress / owner actions:**
-- Merge PR for mobile cart redesign and redeploy pos-web
+- Redeploy pos-web after mobile cart redesign
 - `VALIDATION_SERVICE_URL` = `https://pos-validation.onrender.com` on pos-web
 - Wake pos-validation via `/health` before first analysis if cold
 
@@ -32,9 +32,9 @@ This file is the **single source of truth** for the project's state, architectur
 - Analysis takes 30–60s on Render free tier; keep page open
 - pos-validation 502 on cold start — wake `https://pos-validation.onrender.com/health` first; client now retries
 
-**Next task:** Merge cart redesign PR; pilot-test sales flow on mobile after Render redeploy.
+**Next task:** Pilot-test sales flow on mobile after Render redeploy.
 
-**Render redeploy:** Needed for pos-web after cart redesign merge.
+**Render redeploy:** Needed for pos-web after cart redesign.
 
 ---
 
