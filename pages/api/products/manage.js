@@ -4,8 +4,13 @@ import pool from '../../../lib/db';
 const { formatProduct } = require('../../../lib/formatProduct');
 const { validateProductCategory, normalizeProductFlavor } = require('../../../lib/categories');
 const { buildVapeProductName } = require('../../../lib/vapeCatalog');
+const {
+  vapeLineExistsForStore,
+  getVapeLinesForStore,
+  buildVapeLineMap,
+} = require('../../../lib/vapeLines');
 
-const PRODUCT_COLUMNS = `id, store_id, name, sku, category, subcategory, vape_line, flavor, price, cost, stock_quantity, is_active, created_at, updated_at`;
+const PRODUCT_COLUMNS = `id, store_id, name, sku, category, subcategory, vape_line, flavor, description, price, cost, stock_quantity, is_active, created_at, updated_at`;
 
 async function handler(req, res) {
   if (req.method === 'GET') {
@@ -18,8 +23,18 @@ async function handler(req, res) {
         [req.storeId]
       );
 
+      const vapeLines = await getVapeLinesForStore(pool, req.storeId);
+      const vapeLineMap = buildVapeLineMap(vapeLines);
+
       return res.status(200).json({
-        products: result.rows.map(formatProduct),
+        products: result.rows.map((row) => {
+          const product = formatProduct(row);
+          if (product.vapeLine && vapeLineMap[product.vapeLine]) {
+            product.vapeLineLabel = vapeLineMap[product.vapeLine].label;
+          }
+          return product;
+        }),
+        vapeLines,
       });
     } catch (err) {
       console.error('Products list error:', err);
@@ -36,6 +51,7 @@ async function handler(req, res) {
       subcategory,
       vape_line,
       flavor,
+      description,
       cost,
       stock_quantity,
       is_active,
@@ -59,6 +75,14 @@ async function handler(req, res) {
       return res.status(400).json({ error: flavorCheck.error });
     }
 
+    if (
+      categoryCheck.subcategory === 'vape' &&
+      categoryCheck.vape_line &&
+      !(await vapeLineExistsForStore(pool, req.storeId, categoryCheck.vape_line))
+    ) {
+      return res.status(400).json({ error: 'invalid product line' });
+    }
+
     const parsedPrice = Number(price);
     if (Number.isNaN(parsedPrice) || parsedPrice < 0) {
       return res.status(400).json({ error: 'price must be a non-negative number' });
@@ -76,6 +100,10 @@ async function handler(req, res) {
     }
 
     const normalizedSku = sku ? String(sku).trim() : null;
+    const normalizedDescription =
+      description === undefined || description === null
+        ? null
+        : String(description).trim() || null;
     const activeFlag = is_active === undefined ? true : Boolean(is_active);
 
     let productName = name ? String(name).trim() : '';
@@ -108,8 +136,8 @@ async function handler(req, res) {
       }
 
       const result = await pool.query(
-        `INSERT INTO products (store_id, name, sku, category, subcategory, vape_line, flavor, price, cost, stock_quantity, is_active)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        `INSERT INTO products (store_id, name, sku, category, subcategory, vape_line, flavor, description, price, cost, stock_quantity, is_active)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
          RETURNING ${PRODUCT_COLUMNS}`,
         [
           req.storeId,
@@ -119,6 +147,7 @@ async function handler(req, res) {
           categoryCheck.subcategory,
           categoryCheck.vape_line,
           flavorCheck.flavor,
+          normalizedDescription,
           parsedPrice,
           parsedCost,
           parsedStock,

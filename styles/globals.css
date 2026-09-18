@@ -388,7 +388,8 @@ select {
 }
 
 .input,
-.select {
+.select,
+textarea.input {
   width: 100%;
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--rule);
@@ -397,8 +398,22 @@ select {
   color: var(--ink);
 }
 
+textarea.input {
+  resize: vertical;
+  min-height: 5rem;
+  line-height: 1.45;
+}
+
+.product-description-cell {
+  max-width: 14rem;
+  font-size: 0.8125rem;
+  color: var(--muted);
+  white-space: pre-line;
+}
+
 .input:focus,
-.select:focus {
+.select:focus,
+textarea.input:focus {
   border-color: var(--till);
   outline: none;
   box-shadow: 0 0 0 2px var(--till-soft);

@@ -5,11 +5,13 @@ import { authFetch, formatCurrency, getUser } from '../../lib/api';
 import { getDepartmentForStore } from '../../lib/categories';
 import VapeLineSpecs from '../../components/VapeLineSpecs';
 import { groupProductsByVapeLine } from '../../lib/vapeCatalog';
+import { buildVapeLineMap } from '../../lib/vapeLines';
 
 export default function SalesPage() {
   const user = getUser();
   const isVapeStore = getDepartmentForStore(user?.storeId) === 'vape';
   const [products, setProducts] = useState([]);
+  const [vapeLineMeta, setVapeLineMeta] = useState({});
   const [search, setSearch] = useState('');
   const [cart, setCart] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState('cash');
@@ -36,6 +38,7 @@ export default function SalesPage() {
     try {
       const data = await authFetch('/api/products/manage');
       setProducts(data.products);
+      setVapeLineMeta(buildVapeLineMap(data.vapeLines || []));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -48,8 +51,8 @@ export default function SalesPage() {
   }, [loadProducts]);
 
   const vapeLines = useMemo(
-    () => (isVapeStore ? groupProductsByVapeLine(products) : []),
-    [isVapeStore, products]
+    () => (isVapeStore ? groupProductsByVapeLine(products, vapeLineMeta) : []),
+    [isVapeStore, products, vapeLineMeta]
   );
 
   const filteredVapeLines = useMemo(() => {
@@ -227,7 +230,7 @@ export default function SalesPage() {
                       disabled={outOfStock}
                     >
                       <span className="product-tile-name">{line.vapeLineShortName}</span>
-                      <VapeLineSpecs vapeLine={line.vapeLine} />
+                      <VapeLineSpecs vapeLine={line.vapeLine} specs={line.specs} />
                       <span className="product-tile-price">{formatCurrency(line.price)}</span>
                       <span
                         className={`product-tile-stock${lowStock ? ' is-low' : ''}`}
@@ -399,7 +402,11 @@ export default function SalesPage() {
             <div className="flavor-picker" onClick={(e) => e.stopPropagation()}>
               <h3 id="flavor-picker-title">Choose flavor</h3>
               <p className="flavor-picker-line-name">{flavorPicker.vapeLineShortName}</p>
-              <VapeLineSpecs vapeLine={flavorPicker.vapeLine} className="flavor-picker-specs" />
+              <VapeLineSpecs
+                vapeLine={flavorPicker.vapeLine}
+                specs={flavorPicker.specs}
+                className="flavor-picker-specs"
+              />
               {flavorPicker.inStockVariants.length === 0 ? (
                 <p className="text-muted">No flavors in stock for this line.</p>
               ) : (

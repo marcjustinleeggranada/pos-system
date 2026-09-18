@@ -4,8 +4,9 @@ import pool from '../../../lib/db';
 const { formatProduct } = require('../../../lib/formatProduct');
 const { validateProductCategory, normalizeProductFlavor } = require('../../../lib/categories');
 const { buildVapeProductName } = require('../../../lib/vapeCatalog');
+const { vapeLineExistsForStore } = require('../../../lib/vapeLines');
 
-const PRODUCT_COLUMNS = `id, store_id, name, sku, category, subcategory, vape_line, flavor, price, cost, stock_quantity, is_active, created_at, updated_at`;
+const PRODUCT_COLUMNS = `id, store_id, name, sku, category, subcategory, vape_line, flavor, description, price, cost, stock_quantity, is_active, created_at, updated_at`;
 
 async function handler(req, res) {
   const productId = Number(req.query.id);
@@ -14,8 +15,18 @@ async function handler(req, res) {
   }
 
   if (req.method === 'PUT') {
-    const { name, price, sku, category, subcategory, vape_line, flavor, cost, stock_quantity } =
-      req.body || {};
+    const {
+      name,
+      price,
+      sku,
+      category,
+      subcategory,
+      vape_line,
+      flavor,
+      description,
+      cost,
+      stock_quantity,
+    } = req.body || {};
 
     if (price === undefined || price === null) {
       return res.status(400).json({ error: 'price is required' });
@@ -33,6 +44,14 @@ async function handler(req, res) {
     );
     if (!flavorCheck.ok) {
       return res.status(400).json({ error: flavorCheck.error });
+    }
+
+    if (
+      categoryCheck.subcategory === 'vape' &&
+      categoryCheck.vape_line &&
+      !(await vapeLineExistsForStore(pool, req.storeId, categoryCheck.vape_line))
+    ) {
+      return res.status(400).json({ error: 'invalid product line' });
     }
 
     const parsedPrice = Number(price);
@@ -64,6 +83,11 @@ async function handler(req, res) {
       return res.status(400).json({ error: 'name is required' });
     }
 
+    const normalizedDescription =
+      description === undefined || description === null
+        ? null
+        : String(description).trim() || null;
+
     try {
       if (
         categoryCheck.subcategory === 'vape' &&
@@ -84,8 +108,8 @@ async function handler(req, res) {
       const result = await pool.query(
         `UPDATE products
          SET name = $1, sku = $2, category = $3, subcategory = $4, vape_line = $5, flavor = $6,
-             price = $7, cost = $8, stock_quantity = $9, updated_at = NOW()
-         WHERE id = $10 AND store_id = $11 AND is_active = TRUE
+             description = $7, price = $8, cost = $9, stock_quantity = $10, updated_at = NOW()
+         WHERE id = $11 AND store_id = $12 AND is_active = TRUE
          RETURNING ${PRODUCT_COLUMNS}`,
         [
           productName,
@@ -94,6 +118,7 @@ async function handler(req, res) {
           categoryCheck.subcategory,
           categoryCheck.vape_line,
           flavorCheck.flavor,
+          normalizedDescription,
           parsedPrice,
           parsedCost,
           parsedStock,

@@ -4,11 +4,13 @@ import Layout from '../../components/Layout';
 import ProductForm from '../../components/ProductForm';
 import { authFetch, formatCurrency, getUser } from '../../lib/api';
 import { getDepartmentForStore } from '../../lib/categories';
+import { buildVapeLineMap, formatSpecsText } from '../../lib/vapeLines';
 
 export default function ProductsPage() {
   const user = getUser();
   const isVapeStore = getDepartmentForStore(user?.storeId) === 'vape';
   const [products, setProducts] = useState([]);
+  const [vapeLineMeta, setVapeLineMeta] = useState({});
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -22,6 +24,7 @@ export default function ProductsPage() {
     try {
       const data = await authFetch('/api/products/manage');
       setProducts(data.products);
+      setVapeLineMeta(buildVapeLineMap(data.vapeLines || []));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -108,7 +111,7 @@ export default function ProductsPage() {
         <div className="page-header">
           <h2>Products</h2>
           <button type="button" className="btn btn-primary" onClick={openAddPanel}>
-            {isVapeStore ? 'Add flavor' : 'Add product'}
+            Add product
           </button>
         </div>
 
@@ -143,6 +146,7 @@ export default function ProductsPage() {
                     <th>Name</th>
                   )}
                   {!isVapeStore && <th>Category</th>}
+                  <th>Description</th>
                   <th>Price</th>
                   <th>Stock</th>
                   <th>Actions</th>
@@ -162,6 +166,11 @@ export default function ProductsPage() {
                     {!isVapeStore && (
                       <td>{product.categoryLabel || product.category || '-'}</td>
                     )}
+                    <td className="product-description-cell">
+                      {isVapeStore
+                        ? formatSpecsText(vapeLineMeta[product.vapeLine]?.specs) || '-'
+                        : product.description || '-'}
+                    </td>
                     <td>{formatCurrency(product.price)}</td>
                     <td>{product.stockQuantity}</td>
                     <td>
@@ -190,20 +199,13 @@ export default function ProductsPage() {
         {panelOpen && (
           <div className="overlay-backdrop" onClick={closePanel}>
             <div className="slide-panel" onClick={(e) => e.stopPropagation()}>
-              <h3>
-                {editingProduct
-                  ? isVapeStore
-                    ? 'Edit flavor'
-                    : 'Edit product'
-                  : isVapeStore
-                    ? 'Add flavor'
-                    : 'Add product'}
-              </h3>
+              <h3>{editingProduct ? 'Edit product' : 'Add product'}</h3>
               <ProductForm
                 product={editingProduct}
                 storeId={user?.storeId}
                 onSave={handleSave}
                 onCancel={closePanel}
+                onError={setError}
                 saving={saving}
               />
             </div>
