@@ -6,24 +6,26 @@ This file is the **single source of truth** for the project's state, architectur
 
 ## Current session state
 
-**Last updated:** 2026-09-16
+**Last updated:** 2026-09-18
 
 | Field | Value |
 |---|---|
-| **Branch** | `main` (synced through `b1952db`) |
+| **Branch** | `main` |
 | **Repo** | `marcjustinleeggranada/pos-system` |
 | **Deployment** | Render: `pos-web` + `pos-validation` (free tier). Vercel abandoned. |
 | **Database** | Supabase `rfkoerdkpgyzoyzrmbxa` (ap-southeast-1) |
 | **Render redeploy** | Needed after mobile cart redesign (`9f32afc`) |
 
 **Recently completed:**
+- Products: Add Product label, custom vape product lines, editable line descriptions/specs
 - Mobile sales cart redesign (`9f32afc`): compact cart dock + slide-up sheet on mobile; cleaner sticky till panel on desktop
 - Insights response handling fix (`faa273c`); validation log removed from UI (`2683fc7`)
 - Validation 502 retry + wake (`52689f2`); Gemini iteration fix (`b203a5c`)
 - Product costs + demo sales reset (`fa60408`); Insights UX scroll/banner (`54dea36`)
 
 **In progress / owner actions:**
-- Redeploy pos-web after mobile cart redesign
+- Run `sql/010_vape_lines_and_descriptions.sql` on Supabase (custom product lines + descriptions)
+- Redeploy pos-web after latest product changes
 - `VALIDATION_SERVICE_URL` = `https://pos-validation.onrender.com` on pos-web
 - Wake pos-validation via `/health` before first analysis if cold
 
