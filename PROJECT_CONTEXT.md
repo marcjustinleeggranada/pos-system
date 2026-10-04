@@ -15,10 +15,11 @@ This file is the **single source of truth** for the project's state, architectur
 | **Deployment** | Render: `pos-web` + `pos-validation` (free tier). Vercel abandoned. |
 | **Database** | Supabase `rfkoerdkpgyzoyzrmbxa` (ap-southeast-1) |
 | **Render redeploy** | Automatic on push to `main` (confirmed by owner) |
-| **Migration 010** | Owner to confirm it has been run in the Supabase SQL Editor |
+| **Migration 010** | Applied (verified against Supabase on 2026-10-04: `vape_product_lines` exists with 3 seeded store 1 lines, `products.description` exists) |
 
 **Recently completed:**
 - Docs sync (2026-10-04): reconciled this file and the section notes with the current project knowledge reference; added Section 14 (post-Section 5 updates, limitations, remaining activities)
+- Supabase check (2026-10-04): migration 010 confirmed applied; RLS disabled on all public tables recorded as an open security item
 - Render auto-deploy on push to `main` confirmed by owner; session state, Section 13 reminder and checklist updated to match
 - Products: Add Product label, custom vape product lines, editable line descriptions/specs
 - Mobile sales cart redesign (`9f32afc`): compact cart dock + slide-up sheet on mobile; cleaner sticky till panel on desktop
@@ -27,7 +28,7 @@ This file is the **single source of truth** for the project's state, architectur
 - Product costs + demo sales reset (`fa60408`); Insights UX scroll/banner (`54dea36`)
 
 **In progress / owner actions:**
-- Run `sql/010_vape_lines_and_descriptions.sql` in the **Supabase SQL Editor** (admin role). The app's `pos_user` cannot alter schema, so custom product lines and descriptions will not work in production until this is applied.
+- Decide on Row Level Security: all 7 public tables have RLS disabled as of 2026-10-04 (see Section 14). Check which database role `DATABASE_URL` connects as before enabling it; no role named `pos_user` exists in the Supabase project, and enabling RLS without policies blocks any role that does not bypass it.
 - Confirm the latest `main` deploy of `pos-web` finished successfully in the Render dashboard (auto-deploy is on)
 - `VALIDATION_SERVICE_URL` = `https://pos-validation.onrender.com` on pos-web (full public URL, not an internal hostname)
 - Wake pos-validation via `/health` before first analysis if cold
@@ -383,7 +384,7 @@ When you finish work and update handoff docs:
 ### Changes since Section 5
 
 - **Products:** the add button reads "Add product" for all stores. Vape products are organized by product line (e.g. `black_elite`, `black_empire`, `black_space`); each flavor is a separate SKU. Owners can create new product lines from the product form. Line specs are editable and shown on Sales tiles. Cosmetic products have an editable `description` column.
-- **Migration `sql/010_vape_lines_and_descriptions.sql`:** adds `vape_product_lines` (primary key `(store_id, line_key)`, `label`, `specs` JSONB, `default_price`) and `products.description`. Seeds built-in lines for store 1. Must be run in the Supabase SQL Editor.
+- **Migration `sql/010_vape_lines_and_descriptions.sql`:** adds `vape_product_lines` (primary key `(store_id, line_key)`, `label`, `specs` JSONB, `default_price`) and `products.description`. Seeds built-in lines for store 1. Applied in production (verified 2026-10-04).
 - **Mobile Sales UI:** compact cart dock above the bottom nav plus a slide-up sheet for cart editing and checkout; body scroll locks while the sheet is open. Desktop keeps a sticky right-hand till panel.
 - **New API routes:** `GET/POST /api/products/vape-lines` and `GET/PUT /api/products/vape-lines/[lineKey]` (vape store only); `GET /api/admin/insights-diagnostics`.
 - **Insights:** validation iteration log removed from the UI; auto-scroll to results and a running-state banner added.
@@ -405,6 +406,7 @@ When you finish work and update handoff docs:
 - No A/B test or controlled experiment is built into the system.
 - Only two pilot stores are configured (vape, cosmetics). The originally scoped RTW/clothing use case is not piloted.
 - Not claimed: proven revenue increase, randomized controlled trial, production security audit, or comparison against commercial AI-POS products.
+- Row Level Security is disabled on all 7 public tables (`stores`, `users`, `products`, `transactions`, `transaction_items`, `inventory_logs`, `vape_product_lines`) as of 2026-10-04. Tenant isolation currently relies only on server-side `store_id` filtering. If the Supabase Data API is enabled, anyone holding the project's public anon key could read or modify these tables directly, including `users.password_hash`. Not yet remediated.
 
 ### Status of activities without a dedicated code section
 
