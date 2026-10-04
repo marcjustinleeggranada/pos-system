@@ -47,7 +47,7 @@ Browser → Render pos-web (Next.js) → Supabase Postgres
 
 - **Render free tier** hosts both services; cold starts (~30–60s) after idle are acceptable for capstone demo.
 - **Supabase** project `pos-system` (`rfkoerdkpgyzoyzrmbxa`, `ap-southeast-1`) remains the database — use the **pooler** connection string on Render.
-- Migrations `001`–`008` have been applied remotely.
+- Migrations `001`–`009` have been applied remotely. Migration `010_vape_lines_and_descriptions.sql` must be run in the Supabase SQL Editor (admin role) before custom product lines and descriptions work in production; the app's `pos_user` role cannot alter schema.
 - Test accounts:
   - Vape: `owner@vape.com` / `password123` (store 1)
   - Cosmetics: `owner@cosmetic.com` / `password123` (store 2)

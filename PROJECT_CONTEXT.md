@@ -6,7 +6,7 @@ This file is the **single source of truth** for the project's state, architectur
 
 ## Current session state
 
-**Last updated:** 2026-09-18
+**Last updated:** 2026-10-04
 
 | Field | Value |
 |---|---|
@@ -14,9 +14,11 @@ This file is the **single source of truth** for the project's state, architectur
 | **Repo** | `marcjustinleeggranada/pos-system` |
 | **Deployment** | Render: `pos-web` + `pos-validation` (free tier). Vercel abandoned. |
 | **Database** | Supabase `rfkoerdkpgyzoyzrmbxa` (ap-southeast-1) |
-| **Render redeploy** | Needed after mobile cart redesign (`9f32afc`) |
+| **Render redeploy** | Needed after mobile cart redesign (`9f32afc`); owner to confirm whether done |
+| **Migration 010** | Owner to confirm it has been run in the Supabase SQL Editor |
 
 **Recently completed:**
+- Docs sync (2026-10-04): reconciled this file and the section notes with the current project knowledge reference; added Section 14 (post-Section 5 updates, limitations, remaining activities)
 - Products: Add Product label, custom vape product lines, editable line descriptions/specs
 - Mobile sales cart redesign (`9f32afc`): compact cart dock + slide-up sheet on mobile; cleaner sticky till panel on desktop
 - Insights response handling fix (`faa273c`); validation log removed from UI (`2683fc7`)
@@ -24,10 +26,11 @@ This file is the **single source of truth** for the project's state, architectur
 - Product costs + demo sales reset (`fa60408`); Insights UX scroll/banner (`54dea36`)
 
 **In progress / owner actions:**
-- Run `sql/010_vape_lines_and_descriptions.sql` on Supabase (custom product lines + descriptions)
+- Run `sql/010_vape_lines_and_descriptions.sql` in the **Supabase SQL Editor** (admin role). The app's `pos_user` cannot alter schema, so custom product lines and descriptions will not work in production until this is applied.
 - Redeploy pos-web after latest product changes
-- `VALIDATION_SERVICE_URL` = `https://pos-validation.onrender.com` on pos-web
+- `VALIDATION_SERVICE_URL` = `https://pos-validation.onrender.com` on pos-web (full public URL, not an internal hostname)
 - Wake pos-validation via `/health` before first analysis if cold
+- Pilot testing is in progress; evaluation (with/without AI comparison) and client handover docs are still pending (see Section 14)
 
 **Known issues:**
 - Gemini free tier can return high-demand errors — wait and retry
@@ -208,7 +211,7 @@ Built on Sections 1–2 without modifying their API files.
 - p-value threshold 0.05
 
 **UI:**
-- `/insights` — trigger analysis, view validated recommendations + iteration log
+- `/insights` — trigger analysis, view validated recommendations only (the per-iteration log was removed from the UI; the API still returns a compatible structure). Results are ephemeral and not stored.
 - Nav link added to `components/Layout.js`
 
 **Env vars:** `GEMINI_API_KEY`, `VALIDATION_SERVICE_URL` (see `.env.example`)
@@ -371,3 +374,45 @@ When you finish work and update handoff docs:
 - [ ] `.vscode/` / `.idea/` cleaned of AI/editor vendor references (or not committed)
 - [ ] `git status` reviewed — no unfamiliar dot-folders or tool config files staged
 - [ ] Handoff docs updated without tool-specific branding
+
+---
+
+## 14. Post-Section 5 Updates, Limitations, and Remaining Activities
+
+### Changes since Section 5
+
+- **Products:** the add button reads "Add product" for all stores. Vape products are organized by product line (e.g. `black_elite`, `black_empire`, `black_space`); each flavor is a separate SKU. Owners can create new product lines from the product form. Line specs are editable and shown on Sales tiles. Cosmetic products have an editable `description` column.
+- **Migration `sql/010_vape_lines_and_descriptions.sql`:** adds `vape_product_lines` (primary key `(store_id, line_key)`, `label`, `specs` JSONB, `default_price`) and `products.description`. Seeds built-in lines for store 1. Must be run in the Supabase SQL Editor.
+- **Mobile Sales UI:** compact cart dock above the bottom nav plus a slide-up sheet for cart editing and checkout; body scroll locks while the sheet is open. Desktop keeps a sticky right-hand till panel.
+- **New API routes:** `GET/POST /api/products/vape-lines` and `GET/PUT /api/products/vape-lines/[lineKey]` (vape store only); `GET /api/admin/insights-diagnostics`.
+- **Insights:** validation iteration log removed from the UI; auto-scroll to results and a running-state banner added.
+- **New files:** `lib/vapeLines.js`, `lib/vapeCatalog.js`, `lib/categories.js`, `components/VapeLineSpecs.js`, `components/ProductForm.js`.
+
+### Validation details (reference)
+
+- Trend tests (`restock`, `promote`, `discontinue`): one-sided Mann-Whitney U on the daily unit series split into early and recent halves. Pass requires p < 0.05 and the mean moving in the recommended direction.
+- `bundle`: chi-square on the co-purchase contingency, with at least 2 co-purchases.
+- Constants in `validation-service/validator.py`: `P_VALUE_THRESHOLD = 0.05`, `MIN_DAILY_POINTS = 4`, `MIN_PAIR_COUNT = 2`.
+- Small datasets often fail every test. This is expected behavior, not a bug.
+
+### Known limitations (do not overstate in the thesis or manual)
+
+- No refresh tokens (8-hour JWT), no rate limiting, no password strength rules, global email uniqueness, open register endpoint.
+- Gemini free tier can return "high demand" errors; Render free tier cold-starts both services.
+- Bundle analysis uses a simplified chi-square, not production-grade market basket analysis.
+- Recommendations are advisory only and are not stored historically. Both `owner` and `staff` can run Insights.
+- No A/B test or controlled experiment is built into the system.
+- Only two pilot stores are configured (vape, cosmetics). The originally scoped RTW/clothing use case is not piloted.
+- Not claimed: proven revenue increase, randomized controlled trial, production security audit, or comparison against commercial AI-POS products.
+
+### Status of activities without a dedicated code section
+
+| Major Activity | Status |
+|---|---|
+| #1 Requirements gathering | In process (surveys/interviews) |
+| #8 Integration and testing | Partial — deployed; formal test documentation pending |
+| #9 Pilot testing | In progress — demo seeder plus two pilot stores |
+| #10 Evaluation and comparison | Pending — with/without AI comparison |
+| #11 Client handover and documentation | Pending — user manual and technical docs |
+
+Suggested evaluation metrics (not all implemented): recommendation validity rate per iteration, iterations to convergence, owner usefulness feedback from pilot stores, comparative simulation with vs. without validated recommendations, and end-to-end latency plus Gemini calls per run (up to 4).

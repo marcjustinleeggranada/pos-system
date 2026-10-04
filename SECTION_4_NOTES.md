@@ -68,7 +68,7 @@ Sections 1–3 API files were **not modified**.
 - **Python service runs locally** on port 5000 during development
 - **Minimum data:** trend tests need ≥ 4 daily data points; sparse stores may get zero validated recommendations (expected with little sales history)
 - **Recommendation JSON:** Gemini asked to return structured JSON; `responseMimeType: application/json` used when supported
-- **Only validated recs shown** to owner on Insights page; iteration log available for thesis/demo transparency
+- **Only validated recs shown** to owner on Insights page; the iteration log was later removed from the UI, but the API still returns a compatible structure
 - **No recommendation persistence table** — results are ephemeral per run (fine for capstone)
 
 ---
