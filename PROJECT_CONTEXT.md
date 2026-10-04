@@ -14,11 +14,12 @@ This file is the **single source of truth** for the project's state, architectur
 | **Repo** | `marcjustinleeggranada/pos-system` |
 | **Deployment** | Render: `pos-web` + `pos-validation` (free tier). Vercel abandoned. |
 | **Database** | Supabase `rfkoerdkpgyzoyzrmbxa` (ap-southeast-1) |
-| **Render redeploy** | Needed after mobile cart redesign (`9f32afc`); owner to confirm whether done |
+| **Render redeploy** | Automatic on push to `main` (confirmed by owner) |
 | **Migration 010** | Owner to confirm it has been run in the Supabase SQL Editor |
 
 **Recently completed:**
 - Docs sync (2026-10-04): reconciled this file and the section notes with the current project knowledge reference; added Section 14 (post-Section 5 updates, limitations, remaining activities)
+- Render auto-deploy on push to `main` confirmed by owner; session state, Section 13 reminder and checklist updated to match
 - Products: Add Product label, custom vape product lines, editable line descriptions/specs
 - Mobile sales cart redesign (`9f32afc`): compact cart dock + slide-up sheet on mobile; cleaner sticky till panel on desktop
 - Insights response handling fix (`faa273c`); validation log removed from UI (`2683fc7`)
@@ -27,7 +28,7 @@ This file is the **single source of truth** for the project's state, architectur
 
 **In progress / owner actions:**
 - Run `sql/010_vape_lines_and_descriptions.sql` in the **Supabase SQL Editor** (admin role). The app's `pos_user` cannot alter schema, so custom product lines and descriptions will not work in production until this is applied.
-- Redeploy pos-web after latest product changes
+- Confirm the latest `main` deploy of `pos-web` finished successfully in the Render dashboard (auto-deploy is on)
 - `VALIDATION_SERVICE_URL` = `https://pos-validation.onrender.com` on pos-web (full public URL, not an internal hostname)
 - Wake pos-validation via `/health` before first analysis if cold
 - Pilot testing is in progress; evaluation (with/without AI comparison) and client handover docs are still pending (see Section 14)
@@ -37,9 +38,9 @@ This file is the **single source of truth** for the project's state, architectur
 - Analysis takes 30–60s on Render free tier; keep page open
 - pos-validation 502 on cold start — wake `https://pos-validation.onrender.com/health` first; client now retries
 
-**Next task:** Pilot-test sales flow on mobile after Render redeploy.
+**Next task:** Pilot-test sales flow on mobile once the latest Render deploy has finished.
 
-**Render redeploy:** Needed for pos-web after cart redesign.
+**Render redeploy:** Automatic on push to `main`. Use Manual Deploy only if a deploy fails or stalls.
 
 ---
 
@@ -282,7 +283,7 @@ Chat/conversation history **does not** sync between machines or tools. **Git + t
 2. If architecture, endpoints, or env vars changed → update the matching section above and/or `SECTION_N_NOTES.md`
 3. Review `git status` — no secrets, no tool watermark folders (Section 12)
 4. Commit and **push to `main`** (unless the owner explicitly asked for a feature branch)
-5. Note in **Current session state** whether Render **pos-web** needs a Manual Deploy
+5. Note in **Current session state** that the push triggers a Render auto-deploy, and record any deploy that needed a manual retry
 
 ### Branch policy
 
@@ -292,7 +293,7 @@ Chat/conversation history **does not** sync between machines or tools. **Git + t
 
 ### Render deploy reminder
 
-Pushing to GitHub does not always redeploy Render. After pushes that affect production, check Render dashboard or trigger **Manual Deploy** on **pos-web**.
+Render auto-deploys on push to `main` (confirmed by owner). After pushes that affect production, confirm in the Render dashboard that the deploy finished; trigger **Manual Deploy** on **pos-web** only if it fails or stalls.
 
 ### Remote/cloud development
 
